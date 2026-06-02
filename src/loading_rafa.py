@@ -159,7 +159,6 @@ def select_files_by_period(list_files: list, _from: int | None = None, _to: int 
 
     return files
 
-
 # Maps the `tipo` tokens stored in columns_in_data.csv to the way each column
 # should be converted. `fecha` is handled separately because the source format
 # is day/month/year and needs an explicit parser.
