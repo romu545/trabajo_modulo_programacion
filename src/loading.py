@@ -3,7 +3,6 @@ import re
 import os
 from pathlib import Path
 import pandas as pd
-import pyarrow
 
 
 def _get_basename(path: str) -> str:
@@ -167,6 +166,7 @@ _SIMPLE_DTYPES = {
     "string_id": "string",    # codes kept as text (DANE, consecutivo)
     "string_texto": "string", # free text names
     "categorica": "category",
+    "booleano": "bool"
 }
 
 
@@ -190,6 +190,7 @@ def _apply_dtypes(df: pd.DataFrame, file: str = "data/raw/columns_in_data.csv") 
     - ``fecha``        -> datetime parsed as day/month/year
     - ``string_id`` / ``string_texto`` -> stripped ``string``
     - ``categorica``   -> stripped ``category``
+    - ``boolenao``  -> ``bool``
 
     Columns without a declared ``tipo`` (or absent from the dataframe) are left
     untouched. Unparseable values become nulls instead of raising.
@@ -207,6 +208,8 @@ def _apply_dtypes(df: pd.DataFrame, file: str = "data/raw/columns_in_data.csv") 
             df[column] = pd.to_datetime(df[column], dayfirst=True, errors="coerce")
         elif tipo == "categorica":
             df[column] = df[column].astype("string").str.strip().astype("category")
+        elif tipo == "booleano":
+            df[column] = df[column].astype("string").str.strip().map({"Si": True, "No": False})
         elif tipo in _SIMPLE_DTYPES:
             df[column] = df[column].astype("string").str.strip()
 
@@ -228,3 +231,6 @@ def load_data(path='data/raw/magdalena_parquet/', starting_period=2015_1) -> pd.
 #     _validate_names_files('/home/camilo/PyCharmProjects/trabajo_modulo_programacion/data/raw/magdalena_parquet/'),
 #     _from=2015_1
 # ))
+
+
+

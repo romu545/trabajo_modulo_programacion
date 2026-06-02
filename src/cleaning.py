@@ -1,154 +1,152 @@
 import pandas as pd
+from typing import List
 
-DATA_FOLDER = "data"
 
-MISSING_VALUES = [
-    "", "NA", "N/A", "nan", "NaN",
-    "Unknown", "not recorded", "null", "NULL", "-"
+# CONSTANTS AND MAPPING DICTIONARIES
+
+GRADE_MAPPING = {
+    11: 'Grado 11',
+    12: 'Grado 12',
+    25: 'Ciclo 5 - grado 10 adultos',
+    26: 'Ciclo 6 - grado 10 adultos'
+}
+
+GENDER_MAPPING = {
+    "F": "Femenino",
+    "M": "Masculino"
+}
+
+BOOL_MAPPING = {
+    'S': True,
+    'SI': True,
+    'N': False,
+    'NO': False
+}
+
+## Columns that will be replaced by the standardized schools master file
+COLUMNS_TO_DROP = [
+    'cole_area_ubicacion',
+    'cole_nombre_establecimiento',
+    'cole_nombre_sede',
+    'cole_caracter'
 ]
 
-TEXT_COLUMNS = {
-    "estu_consecutivo":              "string",
-    "estu_estudiante":               "string",
-    "estu_tipodocumento":            "string",
-    "cole_area_ubicacion":           "string",
-    "cole_bilingue":                 "string",
-    "cole_calendario":               "string",
-    "cole_caracter":                 "string",
-    "cole_cod_dane_establecimiento": "string",
-    "cole_cod_dane_sede":            "string",
-    "cole_depto_ubicacion":          "string",
-    "cole_genero":                   "string",
-    "cole_jornada":                  "string",
-    "cole_mcpio_ubicacion":          "string",
-    "cole_naturaleza":               "string",
-    "cole_nombre_establecimiento":   "string",
-    "cole_nombre_sede":              "string",
-    "cole_sede_principal":           "string",
-    "estu_depto_presentacion":       "string",
-    "estu_depto_reside":             "string",
-    "estu_discapacidad":             "string",
-    "estu_etnia":                    "string",
-    "estu_genero":                   "string",
-    "estu_mcpio_presentacion":       "string",
-    "estu_mcpio_reside":             "string",
-    "estu_nacionalidad":             "string",
-    "estu_pais_reside":              "string",
-    "estu_privado_libertad":         "string",
-    "estu_repite":                   "string",
-    "estu_tieneetnia":               "string",
-    "estu_tiporemuneracion":         "string",
-    "estu_dedicacioninternet":       "string",
-    "estu_dedicacionlecturadiaria":  "string",
-    "estu_agregado":                 "string",
-    "fami_comecarnepescadohuevo":    "string",
-    "fami_comecerealfrutoslegumbre": "string",
-    "fami_comelechederivados":       "string",
-    "fami_educacionmadre":           "string",
-    "fami_educacionpadre":           "string",
-    "fami_estratovivienda":          "string",
-    "fami_numlibros":                "string",
-    "fami_situacioneconomica":       "string",
-    "fami_tieneautomovil":           "string",
-    "fami_tienecomputador":          "string",
-    "fami_tieneconsolavideojuegos":  "string",
-    "fami_tienehornomicroogas":      "string",
-    "fami_tieneinternet":            "string",
-    "fami_tienelavadora":            "string",
-    "fami_tienemotocicleta":         "string",
-    "fami_tieneserviciotv":          "string",
-    "fami_trabajolabormadre":        "string",
-    "fami_trabajolaborpadre":        "string",
-    "desemp_c_naturales":            "string",
-    "desemp_ingles":                 "string",
-    "desemp_lectura_critica":        "string",
-    "desemp_matematicas":            "string",
-    "desemp_sociales_ciudadanas":    "string",
-}
 
-DATE_COLUMNS = ["estu_fechanacimiento"]
+# HELPER FUNCTIONS
+
+def _apply_categorical_mappings(df: pd.DataFrame) -> pd.DataFrame:
+    """
+    Maps categorical variables to standardized, readable values.
+    
+    Args:
+        df (pd.DataFrame): Original DataFrame.
+    Returns:
+        pd.DataFrame: DataFrame with mapped variables.
+    """
+    df_clean = df.copy()
+    
+    if 'estu_grado' in df_clean.columns:
+        df_clean['estu_grado'] = df_clean['estu_grado'].map(GRADE_MAPPING)
+        
+    if 'estu_genero' in df_clean.columns:
+        df_clean['estu_genero'] = df_clean['estu_genero'].astype(str).str.upper().map(GENDER_MAPPING)
+        
+    if 'cole_sede_principal' in df_clean.columns:
+        df_clean['cole_sede_principal'] = df_clean['cole_sede_principal'].astype(str).str.upper().map(BOOL_MAPPING)
+        
+    return df_clean
 
 
-GENERO_MAPPING = {
-    "F": "F", "FEMENINO": "F", "FEMALE": "F", "MUJER": "F",
-    "M": "M", "MASCULINO": "M", "MALE": "M", "HOMBRE": "M",
-}
-
-AREA_UBICACION_MAPPING = {
-    "URBANO": "URBANO", "URBAN": "URBANO", "U": "URBANO",
-    "RURAL": "RURAL", "R": "RURAL",
-}
-
-NATURALEZA_MAPPING = {
-    "OFICIAL": "OFICIAL",
-    "NO OFICIAL": "NO OFICIAL", "NOOFICIAL": "NO OFICIAL", "PRIVADO": "NO OFICIAL",
-}
-
-CALENDARIO_MAPPING = {
-    "A": "A", "CALENDARIO A": "A",
-    "B": "B", "CALENDARIO B": "B",
-}
-
-BILINGUE_MAPPING = {
-    "S": "S", "SI": "S", "YES": "S", "Y": "S",
-    "N": "N", "NO": "N",
-}
-
-ESTRATO_MAPPING = {
-    "ESTRATO 1": "1", "1": "1",
-    "ESTRATO 2": "2", "2": "2",
-    "ESTRATO 3": "3", "3": "3",
-    "ESTRATO 4": "4", "4": "4",
-    "ESTRATO 5": "5", "5": "5",
-    "ESTRATO 6": "6", "6": "6",
-}
+def _format_text_columns(df: pd.DataFrame, text_columns: list = ['cole_caracter', 'cole_jornada', 'cole_naturaleza', 'cole_genero']) -> pd.DataFrame:
+    """
+    Applies capitalization and format cleaning to free-text columns.
+    
+    Args:
+        df (pd.DataFrame): DataFrame currently being processed.
+    Returns:
+        pd.DataFrame: DataFrame with clean text formatting.
+    """
+    df_clean = df.copy()
+    
+    for col in text_columns:
+        if col in df_clean.columns:
+            df_clean[col] = df_clean[col].astype(str).str.capitalize().str.strip()
+            
+    return df_clean
 
 
-# CARGA Y CONCATENACIÓN DE ARCHIVOS
 
-frames = []
-
-for filename in FILENAMES:
-    filepath = DATA_FOLDER + "/" + filename
-
-    saber = pd.read_csv(
-        filepath,
-        sep=";",
-        dtype=TEXT_COLUMNS,
-        na_values=MISSING_VALUES,
-        parse_dates=DATE_COLUMNS,
+def _integrate_standardized_schools(df: pd.DataFrame, features_path: str) -> pd.DataFrame:
+    """
+    Safely drops messy school columns and replaces them by performing a LEFT JOIN 
+    with the standardized school features master file.
+    
+    Args:
+        df (pd.DataFrame): Current DataFrame.
+        features_path (str): Path to the standardized schools CSV file.
+    Returns:
+        pd.DataFrame: DataFrame containing official school information.
+    """
+    df_clean = df.copy()
+    
+    # 1. Safely drop messy columns (only if they exist in the dataframe)
+    cols_to_drop_safe = [col for col in COLUMNS_TO_DROP if col in df_clean.columns]
+    df_clean = df_clean.drop(columns=cols_to_drop_safe)
+    
+    # 2. Load the standardization master file
+    
+    try:
+        features_school = pd.read_csv(features_path, dtype='str')
+    except FileNotFoundError:
+        print(f"The file {features_path} was not found. Please check the path.")
+        raise
+        
+    # 3. Perform the merge (LEFT JOIN)
+    df_merged = pd.merge(
+        left=df_clean,
+        right=features_school,
+        on=['cole_cod_dane_establecimiento', 'cole_cod_dane_sede'],
+        how='left'
     )
-
-    # Extraer periodo, año y semestre desde el nombre del archivo
-    periodo_str = filename.replace("Examen_Saber_11_", "").replace(".txt", "")
-    saber["periodo"]   = periodo_str
-    saber["anio"]      = int(periodo_str[:-1])
-    saber["semestre"]  = int(periodo_str[-1])
-
-    frames.append(saber)
-
-saber11 = pd.concat(frames, ignore_index=True)
-print(saber11.shape)
+    
+    return df_merged
 
 
-# ESTANDARIZACIÓN DE CATEGORÍAS por si acaso
+def _reorder_columns(df: pd.DataFrame, ordered_cols: List[str]) -> pd.DataFrame:
+    """
+    Reorders the columns in the DataFrame based on a given list.
+    Any extra columns present in the DataFrame will be appended at the end.
+    """
 
-saber11["estu_genero"] = saber11["estu_genero"].str.strip().str.upper().replace(GENERO_MAPPING)
-saber11["estu_genero"].value_counts(dropna=False)
+    if not ordered_cols:
+        return df
 
-saber11["cole_area_ubicacion"] = saber11["cole_area_ubicacion"].str.strip().str.upper().replace(AREA_UBICACION_MAPPING)
-saber11["cole_area_ubicacion"].value_counts(dropna=False)
+    # Keep only the columns that actually exist in the dataframe
+    valid_cols = [col for col in ordered_cols if col in df.columns]
+    
+    # Append any extra columns not present in the sorting list to avoid data loss
+    extra_cols = [col for col in df.columns if col not in valid_cols]
+    
+    return df[valid_cols + extra_cols]
 
-saber11["cole_naturaleza"] = saber11["cole_naturaleza"].str.strip().str.upper().replace(NATURALEZA_MAPPING)
-saber11["cole_naturaleza"].value_counts(dropna=False)
+# 3. MAIN PIPELINE
 
-saber11["cole_calendario"] = saber11["cole_calendario"].str.strip().str.upper().replace(CALENDARIO_MAPPING)
-saber11["cole_calendario"].value_counts(dropna=False)
-
-saber11["cole_bilingue"] = saber11["cole_bilingue"].str.strip().str.upper().replace(BILINGUE_MAPPING)
-saber11["cole_bilingue"].value_counts(dropna=False)
-
-saber11["fami_estratovivienda"] = saber11["fami_estratovivienda"].str.strip().str.upper().replace(ESTRATO_MAPPING)
-saber11["fami_estratovivienda"].value_counts(dropna=False)
-
-print(saber11.shape)
+def cleaning_pipeline(df: pd.DataFrame, school_features_path: str, order_columns: list = None) -> pd.DataFrame:
+    """
+    Executes the complete data cleaning and standardization pipeline.
+    
+    Args:
+        df (pd.DataFrame): Raw loaded DataFrame.
+        school_features_path (str): Path to the schools master CSV file.
+    Returns:
+        pd.DataFrame: Fully cleaned and standardized DataFrame.
+    """
+    
+    df = _apply_categorical_mappings(df)
+    df = _format_text_columns(df)
+    df = _integrate_standardized_schools(df, school_features_path)
+    
+    # Define desired column order
+    df = _reorder_columns(df, order_columns)
+    
+    return df
