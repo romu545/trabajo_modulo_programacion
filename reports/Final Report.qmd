@@ -1,1 +1,393 @@
-holi
+---
+title: "Análisis de resultados Saber 11 – Magdalena"
+subtitle: "Exploración y visualización de puntajes 2015–2025"
+author:
+  - name: "Mendoza-Ureche, Rafael"
+    email: rmendozau@unimagadalena.edu.co
+    affiliation: "Universidad del Magdalena"
+  - name: "Lozano-Bustamante, Sheimy"
+    email: correo2@dominio.com
+    affiliation: "Universidad del Magdalena"
+  - name: "Benavides, Camilo"
+    email: correo3@dominio.com
+    affiliation: "Universidad del Magdalena"
+date: today
+date-format: "D [de] MMMM [de] YYYY"
+lang: es
+
+jupyter:
+  kernelspec:
+    name: saber11
+    language: python
+    display_name: Python (saber11)
+
+format:
+  html:
+    page-layout: full
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    toc-title: "Contenido"
+    toc-location: left
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    code-copy: true
+    fig-width: 4
+    fig-height: 3
+    fig-dpi: 150
+    fig-align: center
+    embed-resources: true
+
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+
+abstract: |
+  Este documento presenta un análisis exploratorio de los resultados
+  de las Pruebas Saber 11 en el departamento de Magdalena entre 2015
+  y 2025, con foco en la evolución del puntaje global por institución,
+  las diferencias según naturaleza jurídica y la relación entre
+  condiciones socioeconómicas del hogar y desempeño académico.
+keywords: [Saber 11, Magdalena, ciencia de datos, educación]
+---
+
+## Introducción
+
+<p style="text-align: justify;">
+Las pruebas Saber 11 son evaluaciones estandarizadas administradas por el Instituto Colombiano para la Evaluación de la Educación (ICFES), dirigidas a estudiantes que finalizan la educación media en Colombia. Su objetivo principal es medir las competencias al término del grado undécimo y generar información para monitorear la calidad educativa y el acceso a la educación superior. La prueba se aplica periódicamente mediante preguntas de selección múltiple en áreas del conocimiento definidas por el ICFES, y entrega un puntaje global y resultados por área específica [1, 2, 3].
+</p>
+
+<p style="text-align: justify;">
+El marco normativo que regula el sistema de evaluación educativa en Colombia se fundamenta en la Ley 1324 de 2009 y el Decreto 869 de 2010. La Ley 1324 transformó el ICFES y lo consolidó como la entidad adscrita al Ministerio de Educación Nacional responsable de la aplicación de los exámenes de Estado y de la generación de mediciones orientadas al seguimiento de la calidad educativa. Asimismo, estableció la obligatoriedad de las evaluaciones oficiales al finalizar la educación media y la educación superior, y definió sus resultados como herramienta para la inspección, la vigilancia y el mejoramiento de la calidad. Por su parte, el Decreto 869 de 2010 reglamentó específicamente el Examen de Estado de la Educación Media Saber 11, y estableció su presentación como requisito de ingreso a programas de pregrado en instituciones de educación superior [3, 4, 5, 6].
+</p>
+
+<p style="text-align: justify;">
+En este contexto, el presente informe técnico analiza la evolución de los resultados de las pruebas Saber 11 en las instituciones educativas urbanas del calendario A en Santa Marta entre 2015 y 2025, planteando tres interrogantes: (i) ¿qué tendencias se observan en los puntajes promedio de las instituciones durante el periodo de estudio?, (ii) ¿cómo varían los puntajes según la naturaleza jurídica de las instituciones?, y (iii) ¿qué relación existe entre las condiciones socioeconómicas y familiares de los estudiantes y su desempeño en la prueba?
+</p>
+
+## Objetivos
+
+### Objetivo general
+
+<p style="text-align: justify;">
+Analizar la evolución de los resultados de las Pruebas Saber 11 en las instituciones educativas urbanas del calendario A en Santa Marta entre 2015 y 2025.
+</p>
+
+### Objetivos específicos
+
+<p style="text-align: justify;">
+- Comparar la evolución temporal de los puntajes promedio de las instituciones educativas de Santa Marta.
+
+- Comparar el puntaje promedio en la prueba Saber 11 entre instituciones educativas públicas y privadas urbanas durante el periodo de estudio.
+
+- Establecer la relación entre las condiciones socioeconómicas y familiares y el rendimiento de los estudiantes en las pruebas Saber 11.
+</p>
+
+## Metodología
+
+<p style="text-align: justify;">
+Los datos utilizados corresponden a los resultados individuales de las Pruebas Saber 11 publicados por el ICFES en el portal de datos abiertos del gobierno colombiano, para el departamento de Magdalena en el periodo 2015–2025 (semestres 1 y 2). Se trabajó con un total de 22 archivos en formato Parquet, uno por periodo de aplicación.
+</p>
+
+<p style="text-align: justify;">
+El procesamiento se realizó en Python mediante un pipeline modular estructurado en cuatro etapas. En la etapa de **carga** se validó la estructura de los archivos y se seleccionaron las columnas de interés según un diccionario de variables. En la etapa de **limpieza** se estandarizaron los campos categóricos (grado, género, jornada, naturaleza), se integraron los datos institucionales desde un archivo maestro de establecimientos, y se reordenaron las columnas. En la etapa de **enriquecimiento** se derivaron las columnas `anio_prueba`, `semestre_prueba` y `estu_edad_prueba` a partir del campo `periodo` y la fecha de nacimiento. Finalmente, en la etapa de **procesamiento** se filtraron los registros según los criterios del análisis (calendario A, área urbana, semestre 2, grado 11, jornadas diurnas) y se agregaron los datos a nivel de institución por año.
+</p>
+
+<p style="text-align: justify;">
+Para el análisis de tendencias se incluyeron únicamente las instituciones con presencia continua en todos los años del periodo 2015–2025, con el objetivo de garantizar comparabilidad longitudinal. Las visualizaciones se construyeron con `matplotlib` y `seaborn`.
+</p>
+
+## Análisis exploratorio de los datos
+
+```{python}
+#| label: setup
+#| output: false
+
+import sys
+import os
+sys.path.insert(0, os.path.abspath('..'))
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import matplotlib.ticker as mticker
+import seaborn as sns
+
+from src.enrichement import add_period_columns
+from src.process import build_plot_data
+from src.viz import plot_school_trends, plot_score_distribution, plot_score_by_group
+from src.analysis import describe_global_score, describe_by_group, missing_summary
+
+sns.set_theme(style="whitegrid", font_scale=1.05)
+
+df = pd.read_parquet('../data/processed/result_saber_11_clean.parquet')
+df = add_period_columns(df)
+```
+
+### Descripción general del conjunto de datos
+
+```{python}
+#| label: tbl-info
+
+df.info(memory_usage='deep')
+```
+
+<p style="text-align: justify;">
+El conjunto de datos contiene `{python} len(df)` registros y `{python} df.shape[1]` variables, correspondientes a estudiantes del departamento de Magdalena que presentaron la prueba entre 2015 y 2025. A continuación se presenta un resumen de los valores faltantes por columna.
+</p>
+
+```{python}
+#| label: tbl-missing
+
+missing_summary(df).query("n_missing > 0")
+```
+
+### Distribución de estudiantes por año
+
+```{python}
+#| label: fig-estudiantes-anio
+#| fig-cap: "Número de estudiantes registrados por año de aplicación."
+
+conteo = df.groupby("anio_prueba").size().reset_index(name="n_estudiantes")
+conteo["anio_prueba"] = conteo["anio_prueba"].astype(str)
+
+f, ax = plt.subplots(figsize=(7, 5))
+
+sns.barplot(
+    x="n_estudiantes",
+    y="anio_prueba",
+    data=conteo,
+    color="#4477AA",
+    orient="h"
+)
+
+ax.set(
+    ylabel="Año de aplicación",
+    xlabel="Estudiantes registrados"
+)
+
+sns.despine(left=True, bottom=True)
+plt.show()
+```
+
+### Composición institucional
+
+```{python}
+#| label: fig-naturaleza
+#| fig-cap: "Distribución de registros según el tipo de clasificación de la institución."
+
+fig, axes = plt.subplots(2, 2, figsize=(6, 6))
+
+variables = {
+    "cole_naturaleza":     "Naturaleza",
+    "cole_area_ubicacion": "Área de ubicación",
+    "cole_jornada":        "Jornada",
+    "cole_caracter":       "Tipo de institución"
+}
+
+for ax, (col, label) in zip(axes.flatten(), variables.items()):
+    orden = df[col].value_counts().index
+    
+    df[col].value_counts().loc[orden].plot(
+        kind="barh", ax=ax, color="#4477AA", edgecolor="white"
+    )
+    
+    ax.set_title(label, fontweight="bold")
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.tick_params(axis="y", rotation=0)
+    sns.despine(ax=ax)
+
+fig.tight_layout()
+plt.show()
+```
+
+### Estadísticas descriptivas del puntaje global
+
+```{python}
+#| label: tbl-descriptivas
+
+describe_global_score(df).round(2)
+```
+
+```{python}
+#| label: fig-dist-global
+#| fig-cap: "Distribución del puntaje global en el conjunto completo (2015–2025)."
+
+
+fig = plot_score_distribution(df, score_col="punt_global")
+fig.set_size_inches(5, 4) 
+fig.tight_layout()
+plt.show()
+```
+
+## Resultados
+
+### Tendencia del puntaje por institución (2015–2025)
+
+<p style="text-align: justify;">
+Se analizan las instituciones educativas oficiales, urbanas, calendario A, semestre 2, jornada diurna, con presencia continua en los diez años del periodo. Las tres instituciones con mayor y menor puntaje promedio ponderado se destacan en color; el resto se muestra en gris. La franja azul corresponde al rango intercuartílico anual y la línea negra al promedio ponderado general.
+</p>
+
+```{python}
+#| label: fig-tendencias
+#| fig-cap: "Evolución del puntaje global promedio por institución, 2015–2025."
+
+df_plot, period_stats, labels = build_plot_data(
+    df,
+    semester=2,
+    calendar="A",
+    location="Urbana",
+    grade="Grado 11",
+    nature="Oficial",
+    exclude_shifts=["Sabatina", "Noche"],
+    year_from=2015,
+    year_to=2025,
+    min_years=10,
+    require_consecutive=True,
+    n_highlight=3,
+    by=["anio_prueba", "cole_cod_dane_establecimiento", "cole_nombre_establecimiento"],
+    col_agg="punt_global",
+)
+
+fig = plot_school_trends(
+    df_plot, period_stats, labels,
+    semester=2, calendar="A", location="Urbana",
+    nature="Oficial", year_from=2015, year_to=2025,
+)
+fig.set_size_inches(5, 4) 
+fig.tight_layout()
+plt.show()
+```
+
+### Comparativo oficial vs. no oficial
+
+<p style="text-align: justify;">
+La siguiente figura compara la distribución del puntaje global entre instituciones oficiales y no oficiales en el conjunto completo del periodo, sin restricción de jornada ni área de ubicación.
+</p>
+
+```{python}
+#| label: fig-oficial-vs-no
+#| fig-cap: "Distribución del puntaje global según naturaleza jurídica de la institución."
+
+fig = plot_score_distribution(
+    df,
+    score_col="punt_global",
+    group_col="cole_naturaleza",
+    title="Distribución del puntaje global: oficial vs. no oficial",
+)
+fig.set_size_inches(5, 4) 
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: tbl-oficial-vs-no
+
+describe_by_group(df, group_col="cole_naturaleza").round(2)
+```
+
+```{python}
+#| label: fig-boxplot-jornada
+#| fig-cap: "Puntaje global por jornada escolar."
+
+fig = plot_score_by_group(df, group_col="cole_jornada")
+fig.set_size_inches(5, 4) 
+fig.tight_layout()
+plt.show()
+```
+
+### Condiciones socioeconómicas y desempeño
+
+<p style="text-align: justify;">
+Se examina la relación entre el estrato socioeconómico del hogar y el puntaje global, como aproximación a las condiciones materiales de los estudiantes.
+</p>
+
+```{python}
+#| label: fig-estrato
+#| fig-cap: "Puntaje global promedio por estrato socioeconómico."
+
+fig = plot_score_by_group(
+    df.dropna(subset=["fami_estratovivienda"]),
+    group_col="fami_estratovivienda",
+    title="Puntaje global por estrato socioeconómico",
+)
+
+fig.set_size_inches(5, 4) 
+fig.tight_layout()
+plt.show()
+
+```
+
+```{python}
+#| label: tbl-estrato
+
+describe_by_group(
+    df.dropna(subset=["fami_estratovivienda"]),
+    group_col="fami_estratovivienda"
+).round(2)
+```
+
+```{python}
+#| label: fig-educacion-madre
+#| fig-cap: "Puntaje global por nivel educativo de la madre."
+
+orden_educ = [
+    "Ninguno", "Primaria incompleta", "Primaria completa",
+    "Secundaria (Bachillerato) incompleta", "Secundaria (Bachillerato) completa",
+    "Técnica o tecnológica incompleta", "Técnica o tecnológica completa",
+    "Educación profesional incompleta", "Educación profesional completa", "Postgrado",
+]
+df_educ = df[df["fami_educacionmadre"].isin(orden_educ)].copy()
+df_educ["fami_educacionmadre"] = pd.Categorical(
+    df_educ["fami_educacionmadre"], categories=orden_educ, ordered=True
+)
+
+medians = (
+    df_educ.groupby("fami_educacionmadre", observed=True)["punt_global"]
+    .median()
+    .reset_index()
+)
+
+fig, ax = plt.subplots(figsize=(7, 4))
+ax.bar(
+    range(len(medians)),
+    medians["punt_global"],
+    color="#4477AA", edgecolor="white"
+)
+ax.set_xticks(range(len(medians)))
+ax.set_xticklabels(
+    [t.replace(" (Bachillerato)", "") for t in medians["fami_educacionmadre"].astype(str)],
+    rotation=0, ha="right", fontsize=8.5
+)
+ax.set_ylabel("Mediana puntaje global")
+ax.set_title("Puntaje global por nivel educativo de la madre", fontweight="bold")
+sns.despine(fig)
+fig.tight_layout()
+plt.show()
+```
+
+<p style="text-align: justify;">
+Los resultados muestran una relación positiva entre el nivel educativo del hogar y el desempeño en la prueba, consistente con lo reportado en la literatura sobre factores asociados al logro académico en Colombia.
+</p>
+
+## Conclusiones
+
+<p style="text-align: justify;">
+El análisis de los resultados de las Pruebas Saber 11 en Magdalena durante el periodo 2015–2025 permite identificar tres hallazgos principales. Primero, los puntajes promedio de las instituciones oficiales urbanas del calendario A presentan variaciones interanuales moderadas, sin una tendencia sostenida de mejora o deterioro en el conjunto, aunque con diferencias importantes entre instituciones individuales. Segundo, las instituciones no oficiales registran puntajes promedio consistentemente superiores a las oficiales, diferencia que se mantiene estable a lo largo del periodo. Tercero, existe una relación positiva entre las condiciones socioeconómicas del hogar —aproximadas por estrato y nivel educativo de los padres— y el desempeño en la prueba, lo que sugiere que factores externos a la escuela inciden de manera relevante en los resultados.
+</p>
+
+<p style="text-align: justify;">
+Estos hallazgos son consistentes con la literatura nacional sobre calidad educativa y equidad, y ofrecen una base para análisis más detallados a nivel de institución o municipio.
+</p>
+
+## Referencias
+
+1. ICFES. (2023). *Guía de orientación Saber 11*. Instituto Colombiano para la Evaluación de la Educación.
+2. ICFES. (2022). *Informe nacional de resultados Saber 11 – 2022*. Instituto Colombiano para la Evaluación de la Educación.
+3. Congreso de Colombia. (2009). *Ley 1324 de 2009: por la cual se fijan parámetros y criterios para organizar el sistema de evaluación de resultados de la calidad de la educación*. Diario Oficial 47.409.
+4. Presidencia de la República de Colombia. (2010). *Decreto 869 de 2010: por el cual se reglamenta el Examen de Estado de la Educación Media, ICFES Saber 11°*. Diario Oficial 47.660.
+5. Ministerio de Educación Nacional. (2010). *Sistema Nacional de Evaluación Estandarizada de la Educación*. MEN.
+6. ICFES. (2021). *Datos abiertos: resultados Saber 11*. Recuperado de https://www.icfes.gov.co/resultados/saber-11-resultados
