@@ -3,6 +3,9 @@ __pycache__/
 *.py[cod]
 *$py.class
 ~$*.docx
+*.zip
+*.html
+*.quarto_ipynb*
 
 # C extensions
 *.so
