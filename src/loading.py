@@ -8,27 +8,8 @@ import pandas as pd
 def _get_basename(path: str) -> str:
     """
     Extract the basename (filename) from a given path.
-
     Handles both absolute and relative paths, as well as
     different operating system path separators (Windows and Unix).
-
-    Parameters
-    ----------
-    path : str
-        File path, either absolute or relative.
-
-    Returns
-    -------
-    str
-        The filename extracted from the path.
-
-    Examples
-    --------
-    >>> _get_basename('data/raw/Resultado_Saber_11_20151.parquet')
-    'Resultado_Saber_11_20151.parquet'
-
-    >>> _get_basename(r'C:\\Users\\romu5\\Documents\\Resultado_Saber_11_20151.parquet')
-    'Resultado_Saber_11_20151.parquet'
     """
     return os.path.basename(path)
 
@@ -158,6 +139,7 @@ def select_files_by_period(list_files: list, _from: int | None = None, _to: int 
 
     return files
 
+
 # Maps the `tipo` tokens stored in columns_in_data.csv to the way each column
 # should be converted. `fecha` is handled separately because the source format
 # is day/month/year and needs an explicit parser.
@@ -169,18 +151,74 @@ _SIMPLE_DTYPES = {
     "booleano": "bool"
 }
 
+def _selected_columns(
+    metadata_file: str = "data/raw/columns_in_data.csv",
+    attributes: list[str] | None = None,
+    select_all: bool = False,
+) -> pd.DataFrame:
+    """
+    Return metadata rows from the columns registry.
 
-def _selected_columns(file: str = "data/raw/columns_in_data.csv") -> pd.DataFrame:
-    """Return the rows of the columns metadata that are flagged for selection."""
-    col_sel = pd.read_csv(file)
-    return col_sel[col_sel['seleccionada'] == 'si']
+    Reads the columns metadata CSV.  By default filters to rows where
+    ``seleccionada == 'si'``.  Optionally restricts the returned columns
+    to a subset of fields in the registry.
+
+    Parameters
+    ----------
+    file : str, optional
+        Path to the columns metadata CSV.
+        Default ``"data/raw/columns_in_data.csv"``.
+    attributes : list of str, optional
+        Column names from the registry to include in the result
+        (e.g. ``["columna", "tipo"]``).  When ``None`` all columns
+        of the registry are returned.
+    select_all : bool, optional
+        When ``True`` returns all rows regardless of the ``seleccionada``
+        flag.  Default ``False``.
+
+    Returns
+    -------
+    pd.DataFrame
+        Filtered DataFrame with only the selected rows and, if requested,
+        only the specified attributes.
+
+    Raises
+    ------
+    ValueError
+        If any name in *attributes* is not present in the registry.
+
+    Examples
+    --------
+    >>> _selected_columns()                           # flagged rows, all attributes
+    >>> _selected_columns(select_all=True)            # all rows, all attributes
+    >>> _selected_columns(attributes=["columna"])     # flagged rows, one attribute
+    >>> _selected_columns(attributes=["columna", "tipo"], select_all=True)
+    """
+    registry = pd.read_csv(metadata_file)
+    attributes_default = ["columna", "tipo"]
+    selected = registry[attributes_default] if select_all else registry.loc[registry["seleccionada"] == "si", attributes_default]
+
+    if attributes is not None:
+        missing = [a for a in attributes if a not in attributes_default]
+        if missing:
+            raise ValueError(
+                f"_selected_columns: attributes {missing} not found in registry. "
+                f"Available: {attributes_default}"
+            )
+        
+        if len(attributes) > 1:
+            raise ValueError(
+                f"Must selected a attribute between {attributes_default}"
+            )
+    
+        return selected[attributes[0]].to_list()
+
+    return selected.reset_index(drop=True)
 
 
-def _columns_to_select(file="data/raw/columns_in_data.csv") -> list[str]:
-    return _selected_columns(file)['columna'].to_list()  # pyright: ignore
-
-
-def _apply_dtypes(df: pd.DataFrame, file: str = "data/raw/columns_in_data.csv") -> pd.DataFrame:
+def _apply_dtypes(
+    df: pd.DataFrame,
+    metadata_file: str = "data/raw/columns_in_data.csv") -> pd.DataFrame:
     """
     Cast the dataframe columns to the types declared in the `tipo` column of
     the columns metadata CSV.
@@ -195,7 +233,7 @@ def _apply_dtypes(df: pd.DataFrame, file: str = "data/raw/columns_in_data.csv") 
     Columns without a declared ``tipo`` (or absent from the dataframe) are left
     untouched. Unparseable values become nulls instead of raising.
     """
-    meta = _selected_columns(file)
+    meta = _selected_columns(metadata_file)
 
     for column, tipo in zip(meta['columna'], meta['tipo']):
         if column not in df.columns or not isinstance(tipo, str) or not tipo.strip():
@@ -216,21 +254,18 @@ def _apply_dtypes(df: pd.DataFrame, file: str = "data/raw/columns_in_data.csv") 
     return df
 
 
-def load_data(path='data/raw/magdalena_parquet/', starting_period=2015_1) -> pd.DataFrame:
+def load_data(
+    path='data/raw/magdalena_parquet/', 
+    starting_period=2015_1,
+    _columns: list = _selected_columns(attributes = ['columna'])
+    ) -> pd.DataFrame:
+    
     df = pd.read_parquet(
         select_files_by_period(
             _validate_names_files(path),
             _from=starting_period
         ),
-        columns=_columns_to_select()
+        columns=_columns
     )
     return _apply_dtypes(df)
-
-# ['/home/camilo/PyCharmProjects/trabajo_modulo_programacion/data/raw/magdalena_parquet/Resultado_Saber_11_20051.parquet']
-# print(select_files_by_period(
-#     _validate_names_files('/home/camilo/PyCharmProjects/trabajo_modulo_programacion/data/raw/magdalena_parquet/'),
-#     _from=2015_1
-# ))
-
-
 
