@@ -1,25 +1,21 @@
 ---
-title: "Análisis de resultados Saber 11 – Magdalena"
+title: "Análisis de los puntajes de las pruebas Saber 11 en Santa Marta D.T.C.H para el periodo 2015–2025: tendencias, diferencias institucionales y factores asociados"
 subtitle: "Exploración y visualización de puntajes 2015–2025"
 author:
   - name: "Mendoza-Ureche, Rafael"
-    email: rmendozau@unimagadalena.edu.co
+    email: rmendozau@unimagdalena.edu.co
     affiliation: "Universidad del Magdalena"
   - name: "Lozano-Bustamante, Sheimy"
-    email: correo2@dominio.com
+    email: sheimylozanopb@unimagdalena.edu.co
     affiliation: "Universidad del Magdalena"
   - name: "Benavides, Camilo"
-    email: correo3@dominio.com
+    email: cbenavides@unimagdalena.edu.co
     affiliation: "Universidad del Magdalena"
 date: today
 date-format: "D [de] MMMM [de] YYYY"
 lang: es
 
-jupyter:
-  kernelspec:
-    name: saber11
-    language: python
-    display_name: Python (saber11)
+jupyter: python3
 
 format:
   html:
@@ -45,13 +41,13 @@ execute:
   message: false
   cache: false
 
-abstract: |
+Abstract: |
   Este documento presenta un análisis exploratorio de los resultados
   de las Pruebas Saber 11 en el departamento de Magdalena entre 2015
   y 2025, con foco en la evolución del puntaje global por institución,
   las diferencias según naturaleza jurídica y la relación entre
   condiciones socioeconómicas del hogar y desempeño académico.
-keywords: [Saber 11, Magdalena, ciencia de datos, educación]
+Keywords: [Saber 11, Magdalena, ciencia de datos, educación]
 ---
 
 ## Introducción
@@ -89,18 +85,51 @@ Analizar la evolución de los resultados de las Pruebas Saber 11 en las instituc
 ## Metodología
 
 <p style="text-align: justify;">
-Los datos utilizados corresponden a los resultados individuales de las Pruebas Saber 11 publicados por el ICFES en el portal de datos abiertos del gobierno colombiano, para el departamento de Magdalena en el periodo 2015–2025 (semestres 1 y 2). Se trabajó con un total de 22 archivos en formato Parquet, uno por periodo de aplicación.
+Los datos utilizados corresponden a los resultados individuales de las Pruebas Saber 11 publicados por el ICFES en el portal de datos abiertos del gobierno colombiano, para el departamento del Magdalena en el periodo 2015–2025 (semestres 1 y 2). Se trabajó con un total de 22 archivos en formato Parquet, uno por cada periodo de aplicación.
+</p>
+
+### Estructura del proyecto y delegación de responsabilidades
+
+<p style="text-align: justify;">
+Para asegurar una organización clara y colaborativa del flujo de trabajo, el proyecto se estructuró conforme a los estándares de ciencia de datos, asignando a cada componente, descrito más adelante, una responsabilidad definida. El proyecto se alojó en un repositorio en GitHub, lo que permitió la colaboración simultánea y un control adecuado de las versiones del proyecto.
+
+Los componentes del proyecto son los siguientes:
 </p>
 
 <p style="text-align: justify;">
-El procesamiento se realizó en Python mediante un pipeline modular estructurado en cuatro etapas. En la etapa de **carga** se validó la estructura de los archivos y se seleccionaron las columnas de interés según un diccionario de variables. En la etapa de **limpieza** se estandarizaron los campos categóricos (grado, género, jornada, naturaleza), se integraron los datos institucionales desde un archivo maestro de establecimientos, y se reordenaron las columnas. En la etapa de **enriquecimiento** se derivaron las columnas `anio_prueba`, `semestre_prueba` y `estu_edad_prueba` a partir del campo `periodo` y la fecha de nacimiento. Finalmente, en la etapa de **procesamiento** se filtraron los registros según los criterios del análisis (calendario A, área urbana, semestre 2, grado 11, jornadas diurnas) y se agregaron los datos a nivel de institución por año.
+`data`: directorio destinado al almacenamiento de datos crudos (`raw`) y procesados (`processed`) correspondientes a los resultados de la prueba Saber 11 obtenidos en datos.gov (http://datos.gov/) de los archivos auxiliares empleados para su estandarización. Cabe destacar que los archivos se encuentran en formato Parquet, que permite realizar consultas analíticas hasta 100 veces más rápidas y reduce el tamaño de almacenamiento hasta cinco veces en comparación con formatos como CSV o JSON. Esta eficiencia se atribuye a su diseño de almacenamiento en columnas, optimizado para grandes volúmenes de datos. 
 </p>
 
 <p style="text-align: justify;">
-Para el análisis de tendencias se incluyeron únicamente las instituciones con presencia continua en todos los años del periodo 2015–2025, con el objetivo de garantizar comparabilidad longitudinal. Las visualizaciones se construyeron con `matplotlib` y `seaborn`.
+`src` **o source**: esta carpeta contiene los scripts en Python para cada una de las responsabilidades de la resolución del proyecto. A continuación, se describen las funciones:
 </p>
 
-## Análisis exploratorio de los datos
+<p style="text-align: justify;">
+* `loading.py`: se encarga de importar los datos crudos, el tipado y selección de variables y la selección del intervalo de años que se desee evaluar.
+* `cleaning.py`: el propósito de las funciones de este archivo es realizar la estandarización de variables y ordenamiento de las columnas.
+* `enrichement.py`: saca nueva información en base de los datos originales creando nuevas columnas cálculos para su posterior análisis.
+* `análisis.py`: se encarga de almacenar las funciones para analizar el conjunto de datos.
+* `process.py`: este código filtra, agrega y procesa datos de las pruebas para generar visualizaciones.
+* `viz.py`: este código crea los gráficos para visualizar las tendencias de la prueba para su posterior analisis.
+</p>
+
+<p style="text-align: justify;">
+`reports`: directorio de salida para consolidar el informe técnico final con los resultados y visualizaciones a partir del análisis para separar la producción de resultados del código fuente.
+`notebooks`: fue utilizado como espacio para recopilar información para el proyecto y después considerar si se integraba al reporte oficial o no. 
+`constants.py`: en este archivo se almacenan los argumentos de carácter fijo que serán utilizados en las funciones de `main.py`.
+`main.py`: contiene todas las funciones diseñadas para llevar a cabo el análisis de los datos.
+</p>
+
+<p style="text-align: justify;">
+Asimismo, se crearon cuatro ramas usando el software de control de versiones Git, las cuales son las siguientes:
+
+* `main`: en esta rama se mantiene la versión estable del proyecto.
+* `reports`: para la consolidación de los resultados del proyecto.
+* `user_interface`: en esta rama se gestionará lo que concierne a la implementación de los archivos `main.py` y `constants.py`.
+* `business_logic`: busca gestionar los archivos referentes al código inmersos en la carpeta `src/`.
+</p>
+
+### Análisis exploratorio de los datos
 
 ```{python}
 #| label: setup
@@ -122,29 +151,109 @@ from src.analysis import describe_global_score, describe_by_group, missing_summa
 
 sns.set_theme(style="whitegrid", font_scale=1.05)
 
-df = pd.read_parquet('../data/processed/result_saber_11_clean.parquet')
-df = add_period_columns(df)
+df1 = pd.read_parquet('../data/processed/result_saber_11_clean.parquet')
+df = add_period_columns(df1)
 ```
 
-### Descripción general del conjunto de datos
+
+* **Descripción general de los datos**
+
+<p style="text-align: justify;">
+Los datos de este estudio provienen de los archivos oficiales publicados por el repositorio de datos.gov para cada periodo de aplicación de las pruebas Saber 11, desde el primer semestre de 2015 hasta el segundo semestre de 2025 (2015-2, 2016-1, ..., 2025-2). Cada archivo fue cargado, limpiado y estandarizado de forma independiente según el pipeline descrito previamente, y luego integrado en una única base de datos. El conjunto de datos contiene `{python} len(df)` registros y `{python} df.shape[1]` variables, correspondientes a estudiantes del departamento de Magdalena que presentaron la prueba entre 2015 y 2025, el cual ocupa 35.9 MB de memoria. Las variables incluyen información institucional de los establecimientos, características sociodemográficas y familiares de los estudiantes, además de los puntajes obtenidos en cada componente de la prueba, incluido el puntaje global.
+</p>
 
 ```{python}
 #| label: tbl-info
-
+#| tbl-cap: Resumen de la cantidad y tipo de datos del dataset.
 df.info(memory_usage='deep')
 ```
 
+* **Valores faltantes**
+
 <p style="text-align: justify;">
-El conjunto de datos contiene `{python} len(df)` registros y `{python} df.shape[1]` variables, correspondientes a estudiantes del departamento de Magdalena que presentaron la prueba entre 2015 y 2025. A continuación se presenta un resumen de los valores faltantes por columna.
+Los valores faltantes muestra que la mayoría de las variables presentan porcentajes de datos ausentes inferiores al 10%, lo que sugiere una calidad general adecuada de los datos. Las variables asociadas a características familiares y socioeconómicas, como `fami_numlibros` (8.11%), `fami_tieneserviciotv` (6.67%) y `fami_tieneinternet` (6.42%), presentan los mayores porcentajes de valores faltantes. En contraste, variables clave como `punt_ingles` (0.40%), `estu_genero` (0.01%), `cole_jornada` (0.01%) y `estu_grado` (0.00%) muestran una disponibilidad de los datos es suficiente el análisis sobre el rendimiento académico (Tabla 2).
 </p>
 
 ```{python}
 #| label: tbl-missing
-
+#| tbl-cap: "Resumen estadístico de los valores faltantes de las variables."
 missing_summary(df).query("n_missing > 0")
 ```
 
-### Distribución de estudiantes por año
+* **Distribución por jornada escolar**
+
+<p style="text-align: justify;">
+La mañana concentra la mayor proporción de estudiantes evaluados, con más de 32.000 registros, seguida de la tarde, con cerca de 16.000. Las jornadas única y nocturna presentan recuentos intermedios de aproximadamente 8.000 y 7.000, respectivamente, mientras que las jornadas completa y sabatina registran una participación marginal. Esta distribución evidencia la predominancia histórica del modelo de doble jornada en las instituciones educativas del Distrito de Santa Marta.
+</p>
+
+```{python}
+#| label: fig-boxplot-jornada
+#| fig-cap: "Puntaje global por jornada escolar."
+fig = plot_score_by_group(df, group_col="cole_jornada")
+fig.set_size_inches(5, 4) 
+fig.tight_layout()
+plt.show()
+```
+
+* **Distribución por área de ubicación**
+<p style="text-align: justify;">
+En cuanto al área de ubicación, el conjunto consolidado muestra una clara asimetría: 121 instituciones son urbanas y 27 rurales, lo que equivale a aproximadamente 67.000 registros urbanos y 8.000 rurales. Dado que ambos contextos presentan diferencias educativas, socioeconómicas y de acceso, incluirlos en un mismo análisis podría introducir sesgos estructurales y afectar la validez de las conclusiones. Por ello, se decidió restringir el análisis a las instituciones urbanas.
+</p>
+
+* **Distribución por calendario y naturaleza jurídica**
+
+<p style="text-align: justify;">
+De las instituciones identificadas, 144 corresponden al calendario A y solo 2 al calendario B. La baja representación del calendario B impide realizar comparaciones estadísticas robustas, por lo que el análisis se limitó a las instituciones de calendario A. En este grupo, se identificaron 50 instituciones oficiales (públicas) y 70 no oficiales (privadas), proporción adecuada para el análisis comparativo planteado en el primer una proporción
+</p>
+
+```{python}
+#| label: fig-oficial-vs-no
+#| fig-cap: "Distribución del puntaje global según naturaleza jurídica de la institución."
+fig = plot_score_distribution(
+    df,
+    score_col="punt_global",
+    group_col="cole_naturaleza",
+    title="Distribución del puntaje global: oficial vs. no oficial",
+)
+fig.set_size_inches(5, 4) 
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: tbl-oficial-vs-no
+describe_by_group(df, group_col="cole_naturaleza").round(2)
+```
+
+* **Muestra final de análisis**
+
+<p style="text-align: justify;">
+Aplicando conjuntamente los criterios de área urbana, del calendario A y jornada diurna, la muestra final incluyó 119 instituciones urbanas, excluyendo las 2 rurales del calendario A. Este subconjunto garantiza la homogeneidad contextual necesaria para comparar instituciones oficiales y no oficiales y analizar tendencias temporales y condiciones socioeconómicas, sobre una base poblacional coherente y representativa del sistema educativo formal del Distrito de Santa Marta.
+</p>
+
+## Resultados
+
+
+Los siguientes resultados seran organizado por etapas que estan directamente relacionados con los objetivos especificos del informe. Asimismo, se realizó un analisis estadistico descriptivo del dataset final seleccionado en la sección anterior.
+
+### Analisis estadistico descriptivo del puntaje global
+
+```{python}
+#| label: tbl-descriptivas
+describe_global_score(df).round(2)
+```
+
+```{python}
+#| label: fig-dist-global
+#| fig-cap: "Distribución del puntaje global en el conjunto completo (2015–2025)."
+
+fig = plot_score_distribution(df, score_col="punt_global")
+fig.set_size_inches(5, 4) 
+fig.tight_layout()
+plt.show()
+```
+
+### Distribucion de estudiantes por año
 
 ```{python}
 #| label: fig-estudiantes-anio
@@ -172,60 +281,8 @@ sns.despine(left=True, bottom=True)
 plt.show()
 ```
 
-### Composición institucional
 
-```{python}
-#| label: fig-naturaleza
-#| fig-cap: "Distribución de registros según el tipo de clasificación de la institución."
-
-fig, axes = plt.subplots(2, 2, figsize=(6, 6))
-
-variables = {
-    "cole_naturaleza":     "Naturaleza",
-    "cole_area_ubicacion": "Área de ubicación",
-    "cole_jornada":        "Jornada",
-    "cole_caracter":       "Tipo de institución"
-}
-
-for ax, (col, label) in zip(axes.flatten(), variables.items()):
-    orden = df[col].value_counts().index
-    
-    df[col].value_counts().loc[orden].plot(
-        kind="barh", ax=ax, color="#4477AA", edgecolor="white"
-    )
-    
-    ax.set_title(label, fontweight="bold")
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    ax.tick_params(axis="y", rotation=0)
-    sns.despine(ax=ax)
-
-fig.tight_layout()
-plt.show()
-```
-
-### Estadísticas descriptivas del puntaje global
-
-```{python}
-#| label: tbl-descriptivas
-
-describe_global_score(df).round(2)
-```
-
-```{python}
-#| label: fig-dist-global
-#| fig-cap: "Distribución del puntaje global en el conjunto completo (2015–2025)."
-
-
-fig = plot_score_distribution(df, score_col="punt_global")
-fig.set_size_inches(5, 4) 
-fig.tight_layout()
-plt.show()
-```
-
-## Resultados
-
-### Tendencia del puntaje por institución (2015–2025)
+### Etapa 1:Tendencia del puntaje por institución (2015–2025)
 
 <p style="text-align: justify;">
 Se analizan las instituciones educativas oficiales, urbanas, calendario A, semestre 2, jornada diurna, con presencia continua en los diez años del periodo. Las tres instituciones con mayor y menor puntaje promedio ponderado se destacan en color; el resto se muestra en gris. La franja azul corresponde al rango intercuartílico anual y la línea negra al promedio ponderado general.
@@ -234,7 +291,6 @@ Se analizan las instituciones educativas oficiales, urbanas, calendario A, semes
 ```{python}
 #| label: fig-tendencias
 #| fig-cap: "Evolución del puntaje global promedio por institución, 2015–2025."
-
 df_plot, period_stats, labels = build_plot_data(
     df,
     semester=2,
@@ -262,44 +318,43 @@ fig.tight_layout()
 plt.show()
 ```
 
-### Comparativo oficial vs. no oficial
+### Etapa 2: Comparativo oficial vs. no oficial
 
 <p style="text-align: justify;">
 La siguiente figura compara la distribución del puntaje global entre instituciones oficiales y no oficiales en el conjunto completo del periodo, sin restricción de jornada ni área de ubicación.
 </p>
 
 ```{python}
-#| label: fig-oficial-vs-no
-#| fig-cap: "Distribución del puntaje global según naturaleza jurídica de la institución."
+#| label: fig-naturaleza
+#| fig-cap: "Distribución de registros según el tipo de clasificación de la institución."
+fig, axes = plt.subplots(2, 2, figsize=(6, 6))
 
-fig = plot_score_distribution(
-    df,
-    score_col="punt_global",
-    group_col="cole_naturaleza",
-    title="Distribución del puntaje global: oficial vs. no oficial",
-)
-fig.set_size_inches(5, 4) 
+variables = {
+    "cole_naturaleza":     "Naturaleza",
+    "cole_area_ubicacion": "Área de ubicación",
+    "cole_jornada":        "Jornada",
+    "cole_caracter":       "Tipo de institución"
+}
+
+for ax, (col, label) in zip(axes.flatten(), variables.items()):
+    orden = df[col].value_counts().index
+    
+    df[col].value_counts().loc[orden].plot(
+        kind="barh", ax=ax, color="#4477AA", edgecolor="white"
+    )
+    
+    ax.set_title(label, fontweight="bold")
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.tick_params(axis="y", rotation=0)
+    sns.despine(ax=ax)
+
 fig.tight_layout()
 plt.show()
 ```
 
-```{python}
-#| label: tbl-oficial-vs-no
 
-describe_by_group(df, group_col="cole_naturaleza").round(2)
-```
-
-```{python}
-#| label: fig-boxplot-jornada
-#| fig-cap: "Puntaje global por jornada escolar."
-
-fig = plot_score_by_group(df, group_col="cole_jornada")
-fig.set_size_inches(5, 4) 
-fig.tight_layout()
-plt.show()
-```
-
-### Condiciones socioeconómicas y desempeño
+### Etapa 3: Condiciones socioeconómicas y desempeño
 
 <p style="text-align: justify;">
 Se examina la relación entre el estrato socioeconómico del hogar y el puntaje global, como aproximación a las condiciones materiales de los estudiantes.
@@ -308,7 +363,6 @@ Se examina la relación entre el estrato socioeconómico del hogar y el puntaje 
 ```{python}
 #| label: fig-estrato
 #| fig-cap: "Puntaje global promedio por estrato socioeconómico."
-
 fig = plot_score_by_group(
     df.dropna(subset=["fami_estratovivienda"]),
     group_col="fami_estratovivienda",
@@ -323,7 +377,6 @@ plt.show()
 
 ```{python}
 #| label: tbl-estrato
-
 describe_by_group(
     df.dropna(subset=["fami_estratovivienda"]),
     group_col="fami_estratovivienda"
@@ -333,7 +386,6 @@ describe_by_group(
 ```{python}
 #| label: fig-educacion-madre
 #| fig-cap: "Puntaje global por nivel educativo de la madre."
-
 orden_educ = [
     "Ninguno", "Primaria incompleta", "Primaria completa",
     "Secundaria (Bachillerato) incompleta", "Secundaria (Bachillerato) completa",
@@ -373,6 +425,10 @@ plt.show()
 Los resultados muestran una relación positiva entre el nivel educativo del hogar y el desempeño en la prueba, consistente con lo reportado en la literatura sobre factores asociados al logro académico en Colombia.
 </p>
 
+## Analisis de resultados
+
+aca se analizaran los resultados con bibliografia
+
 ## Conclusiones
 
 <p style="text-align: justify;">
@@ -385,9 +441,10 @@ Estos hallazgos son consistentes con la literatura nacional sobre calidad educat
 
 ## Referencias
 
-1. ICFES. (2023). *Guía de orientación Saber 11*. Instituto Colombiano para la Evaluación de la Educación.
-2. ICFES. (2022). *Informe nacional de resultados Saber 11 – 2022*. Instituto Colombiano para la Evaluación de la Educación.
-3. Congreso de Colombia. (2009). *Ley 1324 de 2009: por la cual se fijan parámetros y criterios para organizar el sistema de evaluación de resultados de la calidad de la educación*. Diario Oficial 47.409.
-4. Presidencia de la República de Colombia. (2010). *Decreto 869 de 2010: por el cual se reglamenta el Examen de Estado de la Educación Media, ICFES Saber 11°*. Diario Oficial 47.660.
-5. Ministerio de Educación Nacional. (2010). *Sistema Nacional de Evaluación Estandarizada de la Educación*. MEN.
-6. ICFES. (2021). *Datos abiertos: resultados Saber 11*. Recuperado de https://www.icfes.gov.co/resultados/saber-11-resultados
+
+1.	Glosario ICFES – ICFES. (s. f.). https://www.icfes.gov.co/atencion-y-servicios-a-la-ciudadania/glosario-icfes/
+2.	Instituto Colombiano para la Evaluación de la Educación- ICFES. (2025). ¿Cuáles son los objetivos del examen Saber 11°? – ICFES. (s. f.). https://www.icfes.gov.co/evaluaciones-icfes/saber-11/cuales_son_los_objetivos_del_examen_saber_11/ 
+3.	Congreso de Colombia.(2009).Ley 1324 de 2009 “Por la cual se fijan parámetros y criterios para organizar el sistema de evaluación de resultados de la calidad de la educación, se dictan normas para el fomento de una cultura de la evaluación, en procura de facilitar la inspección y vigilancia del Estado y se transforma el ICFES.”
+4.	Presidencia de la República de Colombia. (2010).Decreto 869 de 2010 “Por el cual se reglamenta el Examen de Estado de la Educación Media, ICFES SABER 11°”
+5.	ICFES: Mejor saber - Ministerio de Educación Nacional de Colombia (s. f.). https://www.mineducacion.gov.co/1621/article-241784.html 
+6.	 American University of Europe -UNADE. (2025). ICFES y su Importancia en Colombia. Universidad Americana de Europa. https://unade.edu.mx/icfes-y-su-importancia-en-colombia/ 
