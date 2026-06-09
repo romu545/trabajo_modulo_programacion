@@ -1,0 +1,488 @@
+---
+title: "Análisis de resultados Saber 11 en Santa Marta"
+subtitle: "Evolución de los puntajes y factores asociados, 2015–2025"
+author:
+  - name: "Mendoza-Ureche, Rafael"
+    email: rmendozau@unimagdalena.edu.co
+    affiliation: "Universidad del Magdalena"
+  - name: "Lozano-Bustamante, Sheimy"
+    email: correo2@dominio.com
+    affiliation: "Universidad del Magdalena"
+  - name: "Benavides, Camilo"
+    email: correo3@dominio.com
+    affiliation: "Universidad del Magdalena"
+date: today
+date-format: "D [de] MMMM [de] YYYY"
+lang: es
+
+jupyter:
+  kernelspec:
+    name: saber11
+    language: python
+    display_name: Python (saber11)
+
+format:
+  html:
+    theme: cosmo
+    toc: true
+    toc-depth: 3
+    toc-title: "Contenido"
+    toc-location: left
+    number-sections: true
+    code-fold: true
+    code-tools: true
+    code-copy: true
+    fig-align: center
+    fig-width: 8
+    fig-height: 4.5
+    fig-dpi: 150
+    tbl-cap-location: bottom
+    embed-resources: true
+    include-in-header:
+      text: |
+        <style>
+          img { max-width: 100%; height: auto; }
+        </style>
+
+execute:
+  echo: true
+  warning: false
+  message: false
+  cache: false
+
+abstract: |
+  En este informe analizamos los resultados de las Pruebas Saber 11 de las
+  instituciones educativas urbanas de calendario A de Santa Marta entre 2015 y
+  2025. Estudiamos cómo ha evolucionado el puntaje global promedio en el tiempo,
+  comparamos el desempeño de los colegios oficiales (públicos) y no oficiales
+  (privados) y exploramos la relación entre las condiciones socioeconómicas del
+  hogar y el rendimiento de los estudiantes. El análisis se realizó en Python
+  con las librerías pandas, matplotlib y seaborn.
+keywords: [Saber 11, Santa Marta, ICFES, educación, ciencia de datos]
+---
+
+## Introducción
+
+<p style="text-align: justify;">
+Las pruebas Saber 11 son evaluaciones estandarizadas administradas por el Instituto Colombiano para la Evaluación de la Educación (ICFES), dirigidas a los estudiantes que terminan la educación media en Colombia. Su objetivo es medir las competencias al finalizar el grado undécimo y generar información para monitorear la calidad educativa y el acceso a la educación superior. La prueba entrega un puntaje global (entre 0 y 500) y resultados por área del conocimiento [1, 2, 3].
+</p>
+
+<p style="text-align: justify;">
+El marco normativo que regula el sistema de evaluación educativa en Colombia se fundamenta en la Ley 1324 de 2009 y el Decreto 869 de 2010. La Ley 1324 consolidó al ICFES como la entidad responsable de los exámenes de Estado y estableció la obligatoriedad de las evaluaciones al finalizar la educación media. El Decreto 869 de 2010 reglamentó el Examen de Estado Saber 11 y lo definió como requisito de ingreso a los programas de pregrado [3, 4, 5, 6].
+</p>
+
+<p style="text-align: justify;">
+En este trabajo nos enfocamos en las instituciones educativas urbanas de calendario A de Santa Marta (capital del departamento del Magdalena) durante el periodo 2015–2025, buscando responder tres preguntas: (i) ¿cómo han evolucionado los puntajes promedio en estos años?, (ii) ¿qué diferencia hay entre los colegios públicos y privados?, y (iii) ¿qué relación existe entre las condiciones socioeconómicas y familiares de los estudiantes y su desempeño en la prueba?
+</p>
+
+## Objetivos
+
+### Objetivo general
+
+<p style="text-align: justify;">
+Analizar la evolución de los resultados de las Pruebas Saber 11 en las instituciones educativas urbanas del calendario A en Santa Marta entre 2015 y 2025.
+</p>
+
+### Objetivos específicos
+
+<p style="text-align: justify;">
+1. Comparar la evolución temporal de los puntajes promedio de las instituciones educativas de Santa Marta.
+2. Comparar el puntaje promedio en la prueba Saber 11 entre instituciones educativas públicas y privadas urbanas durante el periodo de estudio.
+3. Establecer la relación entre las condiciones socioeconómicas y familiares y el rendimiento de los estudiantes en las pruebas Saber 11.
+</p>
+
+## Metodología
+
+<p style="text-align: justify;">
+Los datos provienen del portal de datos abiertos del ICFES. Descargamos un archivo por cada aplicación de la prueba entre 2015 y 2025 (22 archivos, semestres 1 y 2). Con Python (pandas) unimos todos los archivos en una sola tabla, seleccionamos las columnas de interés, estandarizamos las categorías (jornada, naturaleza, género, grado) y completamos el nombre y carácter de cada institución a partir de un archivo maestro de colegios. El resultado se guardó en un único archivo (`result_saber_11_clean.parquet`), que es el que cargamos en este informe. Todos los registros corresponden al municipio de Santa Marta (código DANE 47001).
+</p>
+
+<p style="text-align: justify;">
+Para los análisis nos concentramos en los estudiantes de **grado 11** de instituciones **urbanas** de **calendario A** que presentaron la prueba en el **segundo semestre**, que es la aplicación principal del año (la del primer semestre tiene muy pocos registros). Las gráficas se hicieron con matplotlib y seaborn.
+</p>
+
+## Preparación y exploración de los datos
+
+<p style="text-align: justify;">
+Lo primero es cargar el archivo limpio y crear dos columnas nuevas: el año y el semestre, que sacamos del campo `periodo` (por ejemplo, `20152` significa año 2015, semestre 2). Después armamos el subconjunto de trabajo con los filtros descritos en la metodología.
+</p>
+
+```{python}
+#| label: setup
+
+import pandas as pd
+import matplotlib.pyplot as plt
+import seaborn as sns
+
+# Estilo general de las gráficas
+sns.set_theme(style="whitegrid")
+
+# Cargamos los datos ya limpios
+df = pd.read_parquet("../data/processed/result_saber_11_clean.parquet")
+
+# El periodo viene como texto (ej: 20152). Sacamos el año y el semestre.
+df["anio"] = df["periodo"].astype(str).str[:4].astype(int)
+df["semestre"] = df["periodo"].astype(str).str[4].astype(int)
+
+# Subconjunto de trabajo: grado 11, urbanas, calendario A, segundo semestre.
+datos = df[
+    (df["estu_grado"] == "Grado 11")
+    & (df["cole_area_ubicacion"] == "Urbana")
+    & (df["cole_calendario"] == "A")
+    & (df["semestre"] == 2)
+].copy()
+
+print("Registros totales en el archivo:", len(df))
+print("Registros en el subconjunto de trabajo:", len(datos))
+print("Instituciones distintas:", datos["cole_cod_dane_establecimiento"].nunique())
+print("Años cubiertos:", datos["anio"].min(), "a", datos["anio"].max())
+```
+
+### Valores faltantes
+
+<p style="text-align: justify;">
+Revisamos cuántos datos faltan en cada columna del subconjunto de trabajo. Los puntajes están casi completos; los faltantes se concentran en las preguntas socioeconómicas de la encuesta del estudiante, que no siempre se responden.
+</p>
+
+```{python}
+#| label: tbl-faltantes
+
+# Contamos los valores nulos por columna y mostramos solo las que tienen faltantes
+faltantes = datos.isna().sum()
+faltantes = faltantes[faltantes > 0].sort_values(ascending=False)
+
+tabla_faltantes = pd.DataFrame({
+    "Faltantes": faltantes,
+    "% del total": (faltantes / len(datos) * 100).round(1),
+})
+tabla_faltantes
+```
+
+### Estudiantes por año
+
+<p style="text-align: justify;">
+El número de estudiantes que presenta la prueba cada año es bastante estable, alrededor de 5.000 por año, lo que da una buena base para comparar los resultados en el tiempo.
+</p>
+
+```{python}
+#| label: fig-estudiantes-anio
+#| fig-cap: "Número de estudiantes de grado 11 que presentaron la prueba cada año."
+
+estudiantes_anio = datos.groupby("anio").size().reset_index(name="estudiantes")
+
+plt.figure(figsize=(8, 4))
+sns.barplot(data=estudiantes_anio, x="anio", y="estudiantes", color="steelblue")
+plt.title("Estudiantes por año")
+plt.xlabel("Año")
+plt.ylabel("Número de estudiantes")
+plt.show()
+```
+
+### Composición de las instituciones
+
+<p style="text-align: justify;">
+La mayoría de los registros corresponde a colegios oficiales (públicos) y a jornada de la mañana. Esto es importante tenerlo en cuenta al comparar grupos.
+</p>
+
+```{python}
+#| label: fig-composicion
+#| fig-cap: "Distribución de los estudiantes según la naturaleza de la institución y la jornada."
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 3.6))
+
+# Naturaleza: oficial vs no oficial
+datos["cole_naturaleza"].value_counts().plot(kind="bar", ax=ax1, color="steelblue")
+ax1.set_title("Naturaleza")
+ax1.set_xlabel("")
+ax1.set_ylabel("Estudiantes")
+ax1.tick_params(axis="x", rotation=0)
+
+# Jornada
+datos["cole_jornada"].value_counts().plot(kind="bar", ax=ax2, color="cadetblue")
+ax2.set_title("Jornada")
+ax2.set_xlabel("")
+ax2.set_ylabel("")
+ax2.tick_params(axis="x", rotation=30)
+
+plt.tight_layout()
+plt.show()
+```
+
+### Distribución del puntaje global
+
+<p style="text-align: justify;">
+El puntaje global se distribuye de forma aproximadamente simétrica, con la mayoría de los estudiantes entre 200 y 300 puntos. La tabla resume las estadísticas principales.
+</p>
+
+```{python}
+#| label: fig-distribucion
+#| fig-cap: "Distribución del puntaje global en el subconjunto de trabajo (2015–2025)."
+
+plt.figure(figsize=(8, 4))
+sns.histplot(datos["punt_global"], bins=40, kde=True, color="steelblue")
+plt.title("Distribución del puntaje global")
+plt.xlabel("Puntaje global")
+plt.ylabel("Número de estudiantes")
+plt.show()
+```
+
+```{python}
+#| label: tbl-descriptivas
+
+# Estadísticas descriptivas del puntaje global
+resumen = datos["punt_global"].describe().round(1)
+resumen.to_frame(name="Puntaje global")
+```
+
+## Resultados
+
+### Objetivo 1: Evolución temporal de los puntajes
+
+<p style="text-align: justify;">
+Para ver la evolución en el tiempo calculamos el puntaje global promedio de cada año y lo graficamos. Así podemos observar si el desempeño de las instituciones de Santa Marta ha mejorado, empeorado o se ha mantenido.
+</p>
+
+```{python}
+#| label: fig-evolucion
+#| fig-cap: "Puntaje global promedio por año en Santa Marta (grado 11, urbanas, calendario A)."
+
+# Promedio del puntaje global por año
+promedio_anio = datos.groupby("anio")["punt_global"].mean().reset_index()
+
+plt.figure(figsize=(8, 4))
+sns.lineplot(data=promedio_anio, x="anio", y="punt_global", marker="o", color="steelblue")
+plt.title("Evolución del puntaje global promedio (2015–2025)")
+plt.xlabel("Año")
+plt.ylabel("Puntaje global promedio")
+plt.xticks(promedio_anio["anio"])
+plt.show()
+```
+
+```{python}
+#| label: tbl-evolucion
+
+# Mostramos los promedios año por año
+tabla_anio = promedio_anio.copy()
+tabla_anio["punt_global"] = tabla_anio["punt_global"].round(1)
+tabla_anio.columns = ["Año", "Puntaje promedio"]
+tabla_anio
+```
+
+::: {.callout-note}
+## Respuesta al objetivo 1
+El puntaje global promedio pasó de **242,8 puntos en 2015 a 259,7 en 2025**, un aumento de casi **17 puntos**. La evolución no fue constante: hubo una caída entre 2018 y 2019, una recuperación parcial en 2020 y un crecimiento sostenido desde 2022. En general, las instituciones de Santa Marta muestran una **leve tendencia de mejora** a lo largo del periodo.
+:::
+
+### Objetivo 2: Instituciones públicas vs. privadas
+
+<p style="text-align: justify;">
+En Colombia los colegios se clasifican según su naturaleza en **oficiales** (públicos) y **no oficiales** (privados). Comparamos el puntaje global de los dos grupos con un diagrama de cajas y una tabla resumen.
+</p>
+
+```{python}
+#| label: fig-naturaleza-box
+#| fig-cap: "Puntaje global según la naturaleza de la institución (urbanas)."
+
+plt.figure(figsize=(7, 4))
+sns.boxplot(
+    data=datos,
+    x="cole_naturaleza",
+    y="punt_global",
+    hue="cole_naturaleza",
+    palette="Set2",
+    legend=False,
+)
+plt.title("Puntaje global: oficial vs. no oficial")
+plt.xlabel("")
+plt.ylabel("Puntaje global")
+plt.show()
+```
+
+```{python}
+#| label: tbl-naturaleza
+
+# Tabla resumen por naturaleza
+tabla_nat = datos.groupby("cole_naturaleza")["punt_global"].agg(
+    ["count", "mean", "median", "std"]
+).round(1)
+tabla_nat.columns = ["N° estudiantes", "Promedio", "Mediana", "Desv. estándar"]
+tabla_nat
+```
+
+<p style="text-align: justify;">
+También revisamos si esta diferencia se mantiene a lo largo de los años, graficando el promedio de cada grupo año por año.
+</p>
+
+```{python}
+#| label: fig-naturaleza-anio
+#| fig-cap: "Puntaje promedio por año según la naturaleza de la institución."
+
+# Promedio por año y por naturaleza
+promedio_nat = (
+    datos.groupby(["anio", "cole_naturaleza"])["punt_global"].mean().reset_index()
+)
+
+plt.figure(figsize=(8, 4))
+sns.lineplot(
+    data=promedio_nat,
+    x="anio",
+    y="punt_global",
+    hue="cole_naturaleza",
+    marker="o",
+    palette="Set2",
+)
+plt.title("Evolución del puntaje según naturaleza de la institución")
+plt.xlabel("Año")
+plt.ylabel("Puntaje global promedio")
+plt.xticks(promedio_nat["anio"].unique())
+plt.legend(title="Naturaleza")
+plt.show()
+```
+
+::: {.callout-note}
+## Respuesta al objetivo 2
+Los colegios **no oficiales (privados)** obtienen en promedio **274,6 puntos**, frente a **241,5** de los **oficiales (públicos)**: una diferencia de **33 puntos** a favor de los privados. La brecha aparece todos los años del periodo, por lo que no es un dato aislado sino una diferencia **estable y consistente** entre los dos tipos de institución.
+:::
+
+### Objetivo 3: Condiciones socioeconómicas y desempeño
+
+<p style="text-align: justify;">
+Para este objetivo usamos las variables de la encuesta socioeconómica: el estrato de la vivienda, si el hogar tiene internet o computador, el número de libros y el nivel educativo de los padres. Empezamos con el estrato.
+</p>
+
+```{python}
+#| label: fig-estrato
+#| fig-cap: "Puntaje global promedio según el estrato socioeconómico de la vivienda."
+
+# Dejamos los estratos en orden lógico
+orden_estratos = [
+    "Sin Estrato", "Estrato 1", "Estrato 2", "Estrato 3",
+    "Estrato 4", "Estrato 5", "Estrato 6",
+]
+
+plt.figure(figsize=(8, 4))
+sns.barplot(
+    data=datos,
+    x="fami_estratovivienda",
+    y="punt_global",
+    order=orden_estratos,
+    color="steelblue",
+    errorbar=None,
+)
+plt.title("Puntaje global promedio por estrato")
+plt.xlabel("Estrato")
+plt.ylabel("Puntaje global promedio")
+plt.xticks(rotation=20)
+plt.show()
+```
+
+<p style="text-align: justify;">
+Ahora comparamos el puntaje según si el hogar cuenta con internet y con computador, dos recursos importantes para estudiar.
+</p>
+
+```{python}
+#| label: fig-recursos
+#| fig-cap: "Puntaje global promedio según si el hogar tiene internet y computador."
+
+fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(9, 3.6), sharey=True)
+
+# Cambiamos True/False por Sí/No para que se entienda mejor
+internet = datos.copy()
+internet["fami_tieneinternet"] = internet["fami_tieneinternet"].map({True: "Sí", False: "No"})
+sns.barplot(data=internet, x="fami_tieneinternet", y="punt_global",
+            order=["No", "Sí"], color="steelblue", errorbar=None, ax=ax1)
+ax1.set_title("¿Tiene internet?")
+ax1.set_xlabel("")
+ax1.set_ylabel("Puntaje global promedio")
+
+computador = datos.copy()
+computador["fami_tienecomputador"] = computador["fami_tienecomputador"].map({True: "Sí", False: "No"})
+sns.barplot(data=computador, x="fami_tienecomputador", y="punt_global",
+            order=["No", "Sí"], color="cadetblue", errorbar=None, ax=ax2)
+ax2.set_title("¿Tiene computador?")
+ax2.set_xlabel("")
+ax2.set_ylabel("")
+
+plt.tight_layout()
+plt.show()
+```
+
+<p style="text-align: justify;">
+Finalmente, para resumir qué factores del hogar se relacionan más con el puntaje, convertimos algunas variables ordinales a números y calculamos la correlación de cada una con el puntaje global. Una correlación cercana a 1 indica una relación positiva fuerte; cercana a 0, que casi no hay relación.
+</p>
+
+```{python}
+#| label: fig-correlaciones
+#| fig-cap: "Correlación de los factores del hogar con el puntaje global."
+
+# Convertimos las variables ordinales a números con diccionarios
+mapa_educacion = {
+    "Ninguno": 0, "Primaria incompleta": 1, "Primaria completa": 2,
+    "Secundaria (Bachillerato) incompleta": 3, "Secundaria (Bachillerato) completa": 4,
+    "Técnica o tecnológica incompleta": 5, "Técnica o tecnológica completa": 6,
+    "Educación profesional incompleta": 7, "Educación profesional completa": 8,
+    "Postgrado": 9,
+}
+mapa_estrato = {f"Estrato {i}": i for i in range(1, 7)}
+mapa_libros = {
+    "0 A 10 LIBROS": 1, "11 A 25 LIBROS": 2,
+    "26 A 100 LIBROS": 3, "MÁS DE 100 LIBROS": 4,
+}
+
+datos["educ_madre_num"] = datos["fami_educacionmadre"].map(mapa_educacion)
+datos["educ_padre_num"] = datos["fami_educacionpadre"].map(mapa_educacion)
+datos["estrato_num"] = datos["fami_estratovivienda"].map(mapa_estrato)
+datos["libros_num"] = datos["fami_numlibros"].map(mapa_libros)
+
+# Calculamos la correlación de cada variable con el puntaje global
+columnas = ["punt_global", "educ_madre_num", "educ_padre_num", "estrato_num", "libros_num"]
+correlaciones = datos[columnas].corr()["punt_global"].drop("punt_global").sort_values()
+
+# Le ponemos nombres más claros
+nombres = {
+    "educ_madre_num": "Educación de la madre",
+    "educ_padre_num": "Educación del padre",
+    "estrato_num": "Estrato",
+    "libros_num": "N° de libros en casa",
+}
+correlaciones.index = [nombres[c] for c in correlaciones.index]
+
+plt.figure(figsize=(7.5, 3.6))
+sns.barplot(x=correlaciones.values, y=correlaciones.index, color="steelblue")
+plt.title("Factores del hogar asociados al puntaje global")
+plt.xlabel("Correlación con el puntaje global")
+plt.ylabel("")
+plt.show()
+```
+
+::: {.callout-note}
+## Respuesta al objetivo 3
+Sí existe una relación clara entre las condiciones del hogar y el desempeño. El puntaje **sube de forma constante con el estrato** (de 240 puntos en estrato 1 a 266 en estrato 6) y es **más alto cuando el hogar tiene internet o computador** (alrededor de **21 puntos** más en ambos casos). De todos los factores, el que más se relaciona con el puntaje es el **nivel educativo de la madre** (correlación de 0,33), seguido por el del padre. En resumen, los estudiantes de hogares con mejores condiciones económicas y mayor nivel educativo de los padres tienden a obtener mejores resultados.
+:::
+
+## Conclusiones
+
+<p style="text-align: justify;">
+El análisis de las Pruebas Saber 11 en las instituciones urbanas de calendario A de Santa Marta entre 2015 y 2025 permite responder los tres objetivos planteados:
+</p>
+
+<p style="text-align: justify;">
+1. **Evolución temporal:** el puntaje global promedio mejoró cerca de 17 puntos en el periodo (de 243 a 260), con una caída entre 2018 y 2019 y un crecimiento sostenido en los últimos años.
+2. **Públicas vs. privadas:** los colegios privados obtienen en promedio unos 33 puntos más que los públicos, una diferencia que se mantiene estable todos los años.
+3. **Condiciones socioeconómicas:** el desempeño está relacionado con el estrato, con tener internet y computador en casa, y sobre todo con el nivel educativo de los padres (especialmente la madre).
+</p>
+
+<p style="text-align: justify;">
+En conjunto, los resultados sugieren que, aunque ha habido una mejora general, persisten brechas importantes asociadas al tipo de colegio y a las condiciones del hogar de los estudiantes. Estos hallazgos coinciden con lo que reporta la literatura sobre calidad y equidad educativa en Colombia, y podrían servir de base para análisis más detallados a nivel de institución.
+</p>
+
+## Referencias
+
+1. ICFES. (2023). *Guía de orientación Saber 11*. Instituto Colombiano para la Evaluación de la Educación.
+2. ICFES. (2022). *Informe nacional de resultados Saber 11 – 2022*. Instituto Colombiano para la Evaluación de la Educación.
+3. Congreso de Colombia. (2009). *Ley 1324 de 2009: por la cual se fijan parámetros y criterios para organizar el sistema de evaluación de resultados de la calidad de la educación*. Diario Oficial 47.409.
+4. Presidencia de la República de Colombia. (2010). *Decreto 869 de 2010: por el cual se reglamenta el Examen de Estado de la Educación Media, ICFES Saber 11°*. Diario Oficial 47.660.
+5. Ministerio de Educación Nacional. (2010). *Sistema Nacional de Evaluación Estandarizada de la Educación*. MEN.
+6. ICFES. (2021). *Datos abiertos: resultados Saber 11*. Recuperado de https://www.icfes.gov.co/resultados/saber-11-resultados
+</content>
+</invoke>
