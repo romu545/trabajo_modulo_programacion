@@ -29,11 +29,16 @@ format:
     code-fold: true
     code-tools: true
     code-copy: true
-    fig-width: 4
-    fig-height: 3
+    fig-width: 8
+    fig-height: 4.5
     fig-dpi: 150
     fig-align: center
     embed-resources: true
+    include-in-header:
+      text: |
+        <style>
+          img { max-width: 100%; height: auto; }
+        </style>
 
 execute:
   echo: true
@@ -289,7 +294,7 @@ Se analizan las instituciones educativas oficiales, urbanas, calendario A, semes
 </p>
 
 ```{python}
-#| label: fig-tendencias
+#| label: fig-evolucion
 #| fig-cap: "Evolución del puntaje global promedio por institución, 2015–2025."
 df_plot, period_stats, labels = build_plot_data(
     df,
@@ -312,10 +317,8 @@ fig = plot_school_trends(
     df_plot, period_stats, labels,
     semester=2, calendar="A", location="Urbana",
     nature="Oficial", year_from=2015, year_to=2025,
+    figsize=(10, 5.5),
 )
-fig.set_size_inches(5, 4) 
-fig.tight_layout()
-plt.show()
 ```
 
 ### Etapa 2: Comparativo oficial vs. no oficial
