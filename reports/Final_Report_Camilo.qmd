@@ -6,10 +6,10 @@ author:
     email: rmendozau@unimagdalena.edu.co
     affiliation: "Universidad del Magdalena"
   - name: "Lozano-Bustamante, Sheimy"
-    email: correo2@dominio.com
+    email: sheimylozanopb@unimagdalena.edu.co
     affiliation: "Universidad del Magdalena"
   - name: "Benavides, Camilo"
-    email: correo3@dominio.com
+    email: cbenavides@unimagdalena.edu.co
     affiliation: "Universidad del Magdalena"
 date: today
 date-format: "D [de] MMMM [de] YYYY"

@@ -253,7 +253,9 @@ def plot_school_trends(
     )
 
     # ── direct labels ─────────────────────────────────────────────────────────
-    last_x = anio_order[-1]
+    # Las líneas se dibujan sobre el eje de índices (0..n-1), no sobre el año real,
+    # así que las etiquetas deben ir en el último índice, no en anio_order[-1] (el año).
+    last_x = len(anio_order) - 1
     text_objects: list[plt.Text] = []
 
     for _, row in labels.iterrows():
