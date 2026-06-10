@@ -90,10 +90,15 @@ Analizar la evolución de los resultados de las Pruebas Saber 11 en las instituc
 ## Metodología
 
 <p style="text-align: justify;">
-Los datos utilizados corresponden a los resultados individuales de las Pruebas Saber 11 publicados por el ICFES en el portal de datos abiertos del gobierno colombiano, para el departamento del Magdalena en el periodo 2015–2025 (semestres 1 y 2). Se trabajó con un total de 22 archivos en formato Parquet, uno por cada periodo de aplicación.
-</p>
+Los datos corresponden a los resultados individuales de las Pruebas Saber 11, publicados por el ICFES en el portal datos.gov. Se utilizaron 22 archivos en formato Parquet, uno por cada período de aplicación, abarcando desde el primer semestre de 2015 hasta el segundo semestre de 2025 (2015-1, 2016-1, ..., 2025-2). Cada archivo fue cargado, limpiado y estandarizado de forma independiente mediante un pipeline modular en Python, estructurado en cuatro etapas:
 
-### Estructura del proyecto y delegación de responsabilidades
+1. **Carga**: validación de la estructura de los archivos y selección de columnas de interés según un diccionario de variables.
+2. **Limpieza**: estandarización de campos categóricos (grado, género, jornada, naturaleza), integración de datos institucionales desde un archivo maestro de establecimientos y reordenamiento de columnas.
+3. **Enriquecimiento**: derivación de las columnas `anio_prueba`, `semestre_prueba` y `estu_edad_prueba` a partir del campo `periodo` y la fecha de nacimiento.
+4. **Procesamiento**: filtrado de registros según criterios de análisis (calendario A, área urbana, semestre 2, grado 11, jornadas diurnas) y agregación de datos a nivel institucional por año.
+
+Posteriormente, los archivos procesados se consolidaron en un único archivo Parquet. Para el análisis de tendencias, se incluyeron exclusivamente las instituciones con presencia continua en todos los años del periodo 2015–2025, garantizando así la comparabilidad longitudinal. Las visualizaciones se generaron con las librerías `matplotlib` y `seaborn`.
+</p>
 
 <p style="text-align: justify;">
 Para asegurar una organización clara y colaborativa del flujo de trabajo, el proyecto se estructuró conforme a los estándares de ciencia de datos, asignando a cada componente, descrito más adelante, una responsabilidad definida. El proyecto se alojó en un repositorio en GitHub, lo que permitió la colaboración simultánea y un control adecuado de las versiones del proyecto.
@@ -134,7 +139,7 @@ Asimismo, se crearon cuatro ramas usando el software de control de versiones Git
 * `business_logic`: busca gestionar los archivos referentes al código inmersos en la carpeta `src/`.
 </p>
 
-### Análisis exploratorio de los datos
+## Análisis exploratorio de los datos
 
 ```{python}
 #| label: setup
@@ -161,10 +166,10 @@ df = add_period_columns(df1)
 ```
 
 
-* **Descripción general de los datos**
+### Descripción general de los datos
 
 <p style="text-align: justify;">
-Los datos de este estudio provienen de los archivos oficiales publicados por el repositorio de datos.gov para cada periodo de aplicación de las pruebas Saber 11, desde el primer semestre de 2015 hasta el segundo semestre de 2025 (2015-2, 2016-1, ..., 2025-2). Cada archivo fue cargado, limpiado y estandarizado de forma independiente según el pipeline descrito previamente, y luego integrado en una única base de datos. El conjunto de datos contiene `{python} len(df)` registros y `{python} df.shape[1]` variables, correspondientes a estudiantes del departamento de Magdalena que presentaron la prueba entre 2015 y 2025, el cual ocupa 35.9 MB de memoria. Las variables incluyen información institucional de los establecimientos, características sociodemográficas y familiares de los estudiantes, además de los puntajes obtenidos en cada componente de la prueba, incluido el puntaje global.
+ El conjunto de datos contiene `{python} len(df)` registros y `{python} df.shape[1]` variables, el cual ocupa 35.9 MB de memoria. Las variables incluyen información institucional de los establecimientos, características sociodemográficas y familiares de los estudiantes, además de los puntajes obtenidos en cada componente de la prueba, incluido el puntaje global.
 </p>
 
 ```{python}
