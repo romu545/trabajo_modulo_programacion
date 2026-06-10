@@ -17,6 +17,9 @@ lang: es
 
 jupyter: python3
 
+excecute:
+    echo: false
+
 format:
   html:
     page-layout: full
@@ -39,6 +42,7 @@ format:
       text: |
         <style>
           img { max-width: 100%; height: auto; }
+          p { text-align: justify; }
         </style>
 
 execute:
@@ -82,10 +86,18 @@ Analizar la evolución de los resultados de las Pruebas Saber 11 en las instituc
 
 ## Metodología
 
+### Selección del Dataset
+El conjunto de datos utilizado proviene de los archivos oficiales de resultados de las pruebas Saber 11 publicados por el ICFES, y fue seleccionado por su consistencia y continuidad temporal, al abarcar más de diez años de aplicaciones consecutivas. Si bien los archivos fuente presentaban algunos valores nulos en ciertas variables, estos pudieron ser tratados durante el proceso de limpieza, sin comprometer la integridad del análisis.
+
+Adicionalmente, la riqueza estructural del dataset que combina información institucional, características sociodemográficas y familiares de los estudiantes, y puntajes desagregados por componente permite abordar el fenómeno del rendimiento académico desde múltiples perspectivas.
+
+### Descripción del dataset
 <p style="text-align: justify;">
-Los datos corresponden a los resultados individuales de las Pruebas Saber 11, publicados por el ICFES en el portal datos.gov. Se utilizaron 22 archivos en formato Parquet, uno por cada período de aplicación, abarcando desde el primer semestre de 2015 hasta el segundo semestre de 2025 (2015-1, 2016-1, ..., 2025-2). Cada archivo fue cargado, limpiado y estandarizado de forma independiente mediante un pipeline modular en Python, estructurado en cuatro etapas:
+Los datos corresponden a los resultados individuales de las Pruebas Saber 11, publicados por el ICFES en el portal [datos.gov](https://datos.gov.co/). Se utilizaron 22 archivos en formato Parquet, uno por cada período de aplicación, abarcando desde el primer semestre de 2015 hasta el segundo semestre de 2025 (2015-1, 2016-1, ..., 2025-2). 
 </p>
 
+### Tratamiento de datos 
+Cada archivo fue cargado, limpiado y estandarizado de forma independiente mediante un pipeline modular en Python, estructurado en cuatro etapas:
 <p style="text-align: justify;">
 1. **Carga**: validación de la estructura de los archivos y selección de columnas de interés según un diccionario de variables.
 2. **Limpieza**: estandarización de campos categóricos (grado, género, jornada, naturaleza), integración de datos institucionales desde un archivo maestro de establecimientos y reordenamiento de columnas.
@@ -94,13 +106,12 @@ Los datos corresponden a los resultados individuales de las Pruebas Saber 11, pu
 </p>
 
 <p style="text-align: justify;">
-Posteriormente, los archivos procesados se consolidaron en un único archivo Parquet. Para el análisis de tendencias, se incluyeron exclusivamente las instituciones con presencia continua en todos los años del periodo 2015–2025, garantizando así la comparabilidad longitudinal. Las visualizaciones se generaron con las librerías `matplotlib` y `seaborn`.
+Los archivos procesados se consolidaron en un único archivo Parquet. Para el análisis de tendencias, se incluyeron exclusivamente las instituciones con presencia continua en todos los años del periodo 2015–2025, garantizando así la comparabilidad longitudinal. Las visualizaciones se generaron con las librerías `matplotlib` y `seaborn`.
 </p>
 
+### Estructura del Proyecto
 <p style="text-align: justify;">
 Para asegurar una organización clara y colaborativa del flujo de trabajo, el proyecto se estructuró conforme a los estándares de ciencia de datos, asignando a cada componente, descrito más adelante, una responsabilidad definida. El proyecto se alojó en un repositorio en GitHub, lo que permitió la colaboración simultánea y un control adecuado de las versiones del proyecto.
-
-Los componentes del proyecto son los siguientes:
 </p>
 
 <p style="text-align: justify;">
@@ -136,15 +147,18 @@ Asimismo, se crearon cuatro ramas usando el software de control de versiones Git
 * `business_logic`: busca gestionar los archivos referentes al código inmersos en la carpeta `src/`.
 </p>
 
-<p style="text-align: justify;">
-El procesamiento se realizó en Python mediante un pipeline modular estructurado en cuatro etapas. En la etapa de **carga** se validó la estructura de los archivos y se seleccionaron las columnas de interés según un diccionario de variables. En la etapa de **limpieza** se estandarizaron los campos categóricos (grado, género, jornada, naturaleza), se integraron los datos institucionales desde un archivo maestro de establecimientos, y se reordenaron las columnas. En la etapa de **enriquecimiento** se derivaron las columnas `anio_prueba`, `semestre_prueba` y `estu_edad_prueba` a partir del campo `periodo` y la fecha de nacimiento. Finalmente, en la etapa de **procesamiento** se filtraron los registros según los criterios del análisis (calendario A, área urbana, semestre 2, grado 11, jornadas diurnas) y se agregaron los datos a nivel de institución por año.
-</p>
+### Uso de herramientas de inteligencia artificial
  
+En el desarrollo del presente proyecto se hizo uso de herramientas de inteligencia artificial generativa como apoyo instrumental en tareas específicas del flujo de trabajo técnico, empleando **Claude Code** y **ChatGPT** como asistentes de programación. 
+
+Su uso se concentró en tres frentes: la consulta de funciones disponibles en las librerías científicas de Python principalmente `pangouin` para la selección e implementación de los test estadísticos adecuados al análisis comparativo de puntajes; la traducción de código de visualización desarrollado inicialmente en R con `ggplot2` hacia su equivalente en Python con `matplotlib` y `seaborn`; y la corrección de errores puntuales de sintaxis, compatibilidad de tipos de datos y comportamiento inesperado de funciones durante el desarrollo del pipeline. 
+
+En todos los casos, el uso de estas herramientas se limitó a un rol de apoyo técnico, siendo la definición de los objetivos analíticos, la interpretación de los resultados y las decisiones metodológicas responsabilidad exclusiva del equipo de trabajo.
+
+## Análisis exploratorio de los datos
 <p style="text-align: justify;">
 Para el análisis de tendencias se incluyeron únicamente las instituciones con presencia continua en todos los años del periodo 2015–2025, con el objetivo de garantizar comparabilidad longitudinal. Las visualizaciones se construyeron con `matplotlib` y `seaborn`.
 </p>
-
-## Análisis exploratorio de los datos
 
 ```{python}
 #| label: setup
@@ -159,6 +173,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import matplotlib.ticker as mticker
 import seaborn as sns
+import pingouin as pg
 
 from src.enrichement import add_period_columns
 from src.process import build_plot_data, filter_data
@@ -169,7 +184,6 @@ sns.set_theme(style="whitegrid", font_scale=1.05)
 
 df_origin = pd.read_parquet('../data/processed/result_saber_11_clean.parquet')
 df = add_period_columns(df_origin)
-
 ```
 
 
@@ -199,17 +213,16 @@ missing_summary(df).query("n_missing > 0")
 
 **Distribución por caracteristicas institucionales**
 
-<p style="text-align: justify;">
-La mañana concentra la mayor proporción de estudiantes evaluados, con más de 32.000 registros, seguida de la tarde, con cerca de 16.000. Las jornadas única y nocturna presentan recuentos intermedios de aproximadamente 8.000 y 7.000, respectivamente, mientras que las jornadas completa y sabatina registran una participación marginal. Esta distribución evidencia la predominancia histórica del modelo de doble jornada en las instituciones educativas del Distrito de Santa Marta.
-</p>
+El análisis exploratorio de las características institucionales muestra una distribución heterogénea de las instituciones educativas en el Distrito de Santa Marta. La jornada de la mañana tiene la mayor participación, seguida por la de la tarde. Las jornadas única y nocturna presentan una representación intermedia, mientras que las jornadas completa y sabatina tienen una presencia considerablemente menor. Este patrón refleja la histórica predominancia del modelo de doble jornada en el sistema educativo distrital.
+ 
+En cuanto al área de ubicación, se observó una marcada concentración de instituciones en el sector urbano, con 121 establecimientos frente a 27 en zonas rurales. Esta diferencia implica contextos educativos, sociales y económicos distintos, que pueden influir en los resultados académicos y generar sesgos en las comparaciones. Para garantizar mayor homogeneidad en la población de estudio y fortalecer la validez de los análisis, se restringió la muestra a las instituciones urbanas.
+ 
+De manera similar, la distribución por calendario académico mostró una amplia predominancia del calendario A, con 144 instituciones, mientras que el calendario B solo estuvo representado por dos establecimientos. Debido a la insuficiencia de observaciones en este grupo, se excluyó del análisis para evitar inferencias poco confiables.
+ 
+La aplicación conjunta de estos criterios de depuración, que incluyen instituciones urbanas, calendario A y jornadas diurnas, permitió conformar una muestra final de 119 instituciones educativas urbanas. De estas, 50 pertenecen al sector oficial y 70 al sector no oficial, lo que proporciona una base adecuada para comparar ambos tipos de establecimientos.
 
-<p style="text-align: justify;">
-En cuanto al área de ubicación, el conjunto consolidado muestra una clara asimetría: 121 instituciones son urbanas y 27 rurales, lo que equivale a aproximadamente 67.000 registros urbanos y 8.000 rurales. Dado que ambos contextos presentan diferencias educativas, socioeconómicas y de acceso, incluirlos en un mismo análisis podría introducir sesgos estructurales y afectar la validez de las conclusiones. Por ello, se decidió restringir el análisis a las instituciones urbanas.
-</p>
+La Figura 1 muestra la distribución de las instituciones según naturaleza jurídica, área de ubicación, calendario y jornada académica. La Figura 2 presenta la distribución del puntaje global de las Pruebas Saber 11 para cada una de estas categorías. En general, las distribuciones evidencian diferencias entre los grupos institucionales, especialmente entre instituciones oficiales y no oficiales, lo que respalda la necesidad de profundizar en el análisis comparativo de los factores asociados al desempeño académico.
 
-<p style="text-align: justify;">
-De las instituciones identificadas, 144 corresponden al calendario A y solo 2 al calendario B. La baja representación del calendario B impide realizar comparaciones estadísticas robustas, por lo que el análisis se limitó a las instituciones de calendario A. En este grupo, se identificaron 50 instituciones oficiales (públicas) y 70 no oficiales (privadas), proporción adecuada para el análisis comparativo planteado en el primer una proporción
-</p>
 ```{python}
 #| label: fig-naturaleza
 #| fig-cap: "Distribución de registros según el tipo de clasificación de la institución."
@@ -239,12 +252,6 @@ for ax, (col, label) in zip(axes.flatten(), variables.items()):
 fig.tight_layout()
 plt.show()
 ```
-
-**Muestra final de análisis**
-
-<p style="text-align: justify;">
-Aplicando conjuntamente los criterios de área urbana, del calendario A y jornada diurna, la muestra final incluyó 119 instituciones urbanas, excluyendo las 2 rurales del calendario A. Este subconjunto garantiza la homogeneidad contextual necesaria para comparar instituciones oficiales y analizar tendencias temporales y condiciones socioeconómicas, sobre una base poblacional coherente y representativa del sistema educativo formal del Distrito de Santa Marta.
-</p>
 
 ```{python}
 #| label: fig-oficial-vs-no
@@ -319,7 +326,7 @@ fig = plot_school_trends(
     nature=['Oficial', 'No oficial'], 
     year_from=2015, 
     year_to=2025,
-    figsize=(10, 5.5),
+    figsize=(8, 5.5),
 )
 plt.show()
 ```
@@ -362,67 +369,117 @@ plt.show()
 
 ```{python}
 #| label: tbl-oficial-vs-no
-
+#| fig-cap: "Tabla comparativa entre los puntajes de las instituciones oficiales y no oficiales"
 describe_by_group(
     df_filter, 
     group_col="cole_naturaleza").round(2)
 ```
 
+#### Test de Hipotesis
+Haremos una prueba de Hipotesis y haremos una diferencia de medias para ver si los resultados entre las instituciones oficiales y no oficiales presentan una diferencia significativa, para ello partiremos de la hipótesis nula que ambas medias son iguales, si descartamos la hipótesis alternativa entonces podrémos afirmar que no hay diferencia significativa entre los estudiantes de instituciones oficiales y no oficiales con un $95\%$ de confianza:
+$$
+H_0: \mu_0 = \mu_1
+$$
+$$
+H_1: \mu_0 \ne \mu_1
+$$
+
+```{python}
+_punt_global_oficiales = df_filter[df_filter.cole_naturaleza == "Oficial"]["punt_global"]
+_punt_global_no_oficiales = df_filter[df_filter.cole_naturaleza == "No oficial"]["punt_global"]
+_et2_tt = pg.ttest(_punt_global_oficiales, _punt_global_no_oficiales)
+```
+
+La prueba de hipotesis nos da un P-value de `{python} str(_et2_tt['p_val'].iloc[0])`, el cual es menor a $\alpha = 0.05$ lo cual nos permite con total certeza rechazar la hipótesis nula. Ahora también, el T-value es negativo, lo cual indica que el primer grupo es menor al segundo grupo, el primer grupo siendo las instituciones oficiales y el segundo siendo las instituciones no oficiales.
+
 ### Etapa 3: Condiciones socioeconómicas y desempeño
 
 <p style="text-align: justify;">
-Se examina la relación entre el estrato socioeconómico del hogar y el puntaje global, como aproximación a las condiciones materiales de los estudiantes.
+Se examina la relación entre el estrato socioeconómico del hogar y el puntaje global, diferenciando además entre instituciones oficiales y no oficiales, como aproximación a las condiciones materiales de los estudiantes.
 </p>
 
 ```{python}
 #| label: fig-estrato
-#| fig-cap: "Puntaje global promedio por estrato socioeconómico."
-fig = plot_score_by_group(
-    df_filter.dropna(subset=["fami_estratovivienda"]),
-    group_col="fami_estratovivienda",
-    title="Puntaje global por estrato socioeconómico",
+#| fig-cap: "Distribución del puntaje global por estrato socioeconómico y naturaleza de la institución."
+
+# Usamos solo los estratos numerados (1 a 6), en orden, y los estudiantes que
+# tienen tanto estrato como naturaleza registrados.
+orden_estrato = ["Sin Estrato", "Estrato 1", "Estrato 2", "Estrato 3",
+                 "Estrato 4", "Estrato 5", "Estrato 6"]
+datos_estrato = df_filter.dropna(subset=["fami_estratovivienda", "cole_naturaleza"])
+datos_estrato = datos_estrato[datos_estrato["fami_estratovivienda"].isin(orden_estrato)]
+
+# Boxplot agrupado: en cada estrato, una caja por naturaleza (oficial / no oficial)
+fig, ax = plt.subplots(figsize=(9, 4.5))
+sns.boxplot(
+    data=datos_estrato,
+    x="fami_estratovivienda",
+    y="punt_global",
+    hue="cole_naturaleza",
+    order=orden_estrato,
+    hue_order=["Oficial", "No oficial"],
+    palette=["#F8766D", "#00BFC4"],
+    fliersize=1.5,
+    ax=ax,
 )
 
-fig.set_size_inches(5, 4) 
+# En el eje x mostramos solo el número del estrato (1, 2, 3, …)
+ax.set_xticks(range(len(orden_estrato)))
+ax.set_xticklabels([e.replace("Estrato ", "") for e in orden_estrato])
+ax.set_xlabel("Estrato socioeconómico")
+ax.set_ylabel("Puntaje global")
+ax.set_title("Puntaje global por estrato y naturaleza de la institución",
+             fontweight="bold")
+
+# Leyenda debajo del gráfico, como en el ejemplo
+ax.legend(title="Naturaleza", loc="upper center",
+          bbox_to_anchor=(0.5, -0.15), ncol=2, frameon=False)
+
+sns.despine()
 fig.tight_layout()
 plt.show()
-
 ```
 
 
 ```{python}
 #| label: fig-educacion-madre
-#| fig-cap: "Puntaje global por nivel educativo de la madre."
+#| fig-cap: "Distribución del puntaje global por nivel educativo de la madre y naturaleza de la institución."
 orden_educ = [
     "Ninguno", "Primaria incompleta", "Primaria completa",
     "Secundaria (Bachillerato) incompleta", "Secundaria (Bachillerato) completa",
     "Técnica o tecnológica incompleta", "Técnica o tecnológica completa",
     "Educación profesional incompleta", "Educación profesional completa", "Postgrado",
 ]
-df_educ = df[df["fami_educacionmadre"].isin(orden_educ)].copy()
-df_educ["fami_educacionmadre"] = pd.Categorical(
-    df_educ["fami_educacionmadre"], categories=orden_educ, ordered=True
-)
+df_educ = df_filter[df_filter["fami_educacionmadre"].isin(orden_educ)].copy()
 
-medians = (
-    df_educ.groupby("fami_educacionmadre", observed=True)["punt_global"]
-    .median()
-    .reset_index()
+# Nombres más cortos para el eje y (quitamos "(Bachillerato)")
+df_educ["educ_madre"] = df_educ["fami_educacionmadre"].astype(str).str.replace(
+    " (Bachillerato)", "", regex=False
 )
+orden_corto = [e.replace(" (Bachillerato)", "") for e in orden_educ]
 
-fig, ax = plt.subplots(figsize=(7, 4))
-ax.bar(
-    range(len(medians)),
-    medians["punt_global"],
-    color="#4477AA", edgecolor="white"
+# Un boxplot horizontal por nivel educativo, separado por naturaleza (oficial / no oficial)
+fig, ax = plt.subplots(figsize=(8, 7))
+sns.boxplot(
+    data=df_educ,
+    x="punt_global",
+    y="educ_madre",
+    hue="cole_naturaleza",
+    order=orden_corto,
+    hue_order=["Oficial", "No oficial"],
+    palette=["#F8766D", "#00BFC4"],
+    fliersize=1.0,
+    ax=ax,
 )
-ax.set_xticks(range(len(medians)))
-ax.set_xticklabels(
-    [t.replace(" (Bachillerato)", "") for t in medians["fami_educacionmadre"].astype(str)],
-    rotation=0, ha="right", fontsize=8.5
-)
-ax.set_ylabel("Mediana puntaje global")
-ax.set_title("Puntaje global por nivel educativo de la madre", fontweight="bold")
+ax.set_xlabel("Puntaje global")
+ax.set_ylabel("Nivel educativo de la madre")
+ax.set_title("Puntaje global por nivel educativo de la madre y naturaleza",
+             fontweight="bold")
+
+# Leyenda debajo del gráfico, como en el ejemplo
+ax.legend(title="Naturaleza", loc="upper center",
+          bbox_to_anchor=(0.5, -0.08), ncol=2, frameon=False)
+
 sns.despine(fig)
 fig.tight_layout()
 plt.show()
