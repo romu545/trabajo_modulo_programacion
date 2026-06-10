@@ -253,9 +253,10 @@ def plot_school_trends(
     )
 
     # ── direct labels ─────────────────────────────────────────────────────────
-    # Las líneas se dibujan sobre el eje de índices (0..n-1), no sobre el año real,
-    # así que las etiquetas deben ir en el último índice, no en anio_order[-1] (el año).
-    last_x = len(anio_order) - 1
+
+    # FIX: usar el índice del último año, no el valor del año
+    last_x_idx = len(anio_order) - 1
+
     text_objects: list[plt.Text] = []
 
     for _, row in labels.iterrows():
@@ -263,7 +264,9 @@ def plot_school_trends(
         short = textwrap.shorten(name, width=40, placeholder="…")
         color = hl_palette.get(row["cole_cod_dane_establecimiento"], "black")
         t = ax.text(
-            last_x, row["promedio"], f"  {short}",
+            last_x_idx + 0.15,   # FIX: índice correcto + pequeño offset
+            row["promedio"],
+            short,
             fontsize=7.5, color=color, va="center", zorder=5,
             clip_on=False,
         )
@@ -273,7 +276,8 @@ def plot_school_trends(
         adjust_text(text_objects, ax=ax, expand_points=(1.2, 1.8))
 
     # ── axes formatting ───────────────────────────────────────────────────────
-    ax.set_xlim(-0.5, len(anio_order) - 0.5 + 4)   # extra space for labels
+    # FIX: xlim usa índice del último año + espacio para etiquetas
+    ax.set_xlim(-0.5, len(anio_order) - 1 + 5)
     ax.set_ylim(y_min, y_max)
     ax.set_xticks(range(len(anio_order)))
     ax.set_xticklabels(anio_order, rotation=0)
@@ -307,7 +311,6 @@ def plot_school_trends(
     fig.text(0.01, -0.01, caption, fontsize=8, color="#666666", ha="left")
 
     fig.tight_layout()
-    plt.show()
     return fig
 
 

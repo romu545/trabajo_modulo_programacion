@@ -20,11 +20,12 @@ jupyter: python3
 format:
   html:
     page-layout: full
-    theme: cosmo
+    theme: ciruelan
     toc: true
     toc-depth: 3
     toc-title: "Contenido"
-    toc-location: left
+    toc-location: right
+    toc-expand: true
     number-sections: true
     code-fold: true
     code-tools: true
@@ -46,13 +47,15 @@ execute:
   message: false
   cache: false
 
-Abstract: |
-  Este documento presenta un análisis exploratorio de los resultados
-  de las Pruebas Saber 11 en el departamento de Magdalena entre 2015
-  y 2025, con foco en la evolución del puntaje global por institución,
-  las diferencias según naturaleza jurídica y la relación entre
-  condiciones socioeconómicas del hogar y desempeño académico.
-Keywords: [Saber 11, Magdalena, ciencia de datos, educación]
+
+# abstract: 
+#     Este documento presenta un análisis exploratorio de los resultados
+#     de las Pruebas Saber 11 en el departamento de Magdalena entre 2015
+#     y 2025, con foco en la evolución del puntaje global por institución,
+#     las diferencias según naturaleza jurídica y la relación entre
+#     condiciones socioeconómicas del hogar y desempeño académico.
+# keywords: [Saber 11, Magdalena, ciencia de datos, educación]
+
 ---
 
 ## Introducción
@@ -139,6 +142,14 @@ Asimismo, se crearon cuatro ramas usando el software de control de versiones Git
 * `business_logic`: busca gestionar los archivos referentes al código inmersos en la carpeta `src/`.
 </p>
 
+<p style="text-align: justify;">
+El procesamiento se realizó en Python mediante un pipeline modular estructurado en cuatro etapas. En la etapa de **carga** se validó la estructura de los archivos y se seleccionaron las columnas de interés según un diccionario de variables. En la etapa de **limpieza** se estandarizaron los campos categóricos (grado, género, jornada, naturaleza), se integraron los datos institucionales desde un archivo maestro de establecimientos, y se reordenaron las columnas. En la etapa de **enriquecimiento** se derivaron las columnas `anio_prueba`, `semestre_prueba` y `estu_edad_prueba` a partir del campo `periodo` y la fecha de nacimiento. Finalmente, en la etapa de **procesamiento** se filtraron los registros según los criterios del análisis (calendario A, área urbana, semestre 2, grado 11, jornadas diurnas) y se agregaron los datos a nivel de institución por año.
+</p>
+ 
+<p style="text-align: justify;">
+Para el análisis de tendencias se incluyeron únicamente las instituciones con presencia continua en todos los años del periodo 2015–2025, con el objetivo de garantizar comparabilidad longitudinal. Las visualizaciones se construyeron con `matplotlib` y `seaborn`.
+</p>
+
 ## Análisis exploratorio de los datos
 
 ```{python}
@@ -147,6 +158,7 @@ Asimismo, se crearon cuatro ramas usando el software de control de versiones Git
 
 import sys
 import os
+from locale import normalize
 sys.path.insert(0, os.path.abspath('..'))
 
 import pandas as pd
@@ -161,8 +173,8 @@ from src.analysis import describe_global_score, describe_by_group, missing_summa
 
 sns.set_theme(style="whitegrid", font_scale=1.05)
 
-df1 = pd.read_parquet('../data/processed/result_saber_11_clean.parquet')
-df = add_period_columns(df1)
+df_origin = pd.read_parquet('../data/processed/result_saber_11_clean.parquet')
+df = add_period_columns(df_origin)
 ```
 
 
@@ -178,10 +190,10 @@ df = add_period_columns(df1)
 df.info(memory_usage='deep')
 ```
 
-* **Valores faltantes**
+**Valores faltantes**
 
 <p style="text-align: justify;">
-Los valores faltantes muestra que la mayoría de las variables presentan porcentajes de datos ausentes inferiores al 10%, lo que sugiere una calidad general adecuada de los datos. Las variables asociadas a características familiares y socioeconómicas, como `fami_numlibros` (8.11%), `fami_tieneserviciotv` (6.67%) y `fami_tieneinternet` (6.42%), presentan los mayores porcentajes de valores faltantes. En contraste, variables clave como `punt_ingles` (0.40%), `estu_genero` (0.01%), `cole_jornada` (0.01%) y `estu_grado` (0.00%) muestran una disponibilidad de los datos es suficiente el análisis sobre el rendimiento académico (Tabla 2).
+Los valores faltantes muestra que la mayoría de las variables presentan porcentajes de datos ausentes inferiores al 10%, lo que sugiere una calidad general adecuada de los datos. Las variables asociadas a características familiares y socioeconómicas, como `fami_numlibros` (8.11%), `fami_tieneserviciotv` (6.67%) y `fami_tieneinternet` (6.42%), presentan los mayores porcentajes de valores faltantes. En contraste, variables clave como `punt_ingles` (0.40%), `estu_genero` (0.01%) y `estu_grado` (0.00%) muestran una disponibilidad de los datos es suficiente el análisis sobre el rendimiento académico (Tabla 2).
 </p>
 
 ```{python}
@@ -190,39 +202,69 @@ Los valores faltantes muestra que la mayoría de las variables presentan porcent
 missing_summary(df).query("n_missing > 0")
 ```
 
-* **Distribución por jornada escolar**
+**Distribución por caracteristicas institucinales**
 
 <p style="text-align: justify;">
 La mañana concentra la mayor proporción de estudiantes evaluados, con más de 32.000 registros, seguida de la tarde, con cerca de 16.000. Las jornadas única y nocturna presentan recuentos intermedios de aproximadamente 8.000 y 7.000, respectivamente, mientras que las jornadas completa y sabatina registran una participación marginal. Esta distribución evidencia la predominancia histórica del modelo de doble jornada en las instituciones educativas del Distrito de Santa Marta.
 </p>
 
-```{python}
-#| label: fig-boxplot-jornada
-#| fig-cap: "Puntaje global por jornada escolar."
-fig = plot_score_by_group(df, group_col="cole_jornada")
-fig.set_size_inches(5, 4) 
-fig.tight_layout()
-plt.show()
-```
-
-* **Distribución por área de ubicación**
 <p style="text-align: justify;">
 En cuanto al área de ubicación, el conjunto consolidado muestra una clara asimetría: 121 instituciones son urbanas y 27 rurales, lo que equivale a aproximadamente 67.000 registros urbanos y 8.000 rurales. Dado que ambos contextos presentan diferencias educativas, socioeconómicas y de acceso, incluirlos en un mismo análisis podría introducir sesgos estructurales y afectar la validez de las conclusiones. Por ello, se decidió restringir el análisis a las instituciones urbanas.
 </p>
 
-* **Distribución por calendario y naturaleza jurídica**
-
 <p style="text-align: justify;">
 De las instituciones identificadas, 144 corresponden al calendario A y solo 2 al calendario B. La baja representación del calendario B impide realizar comparaciones estadísticas robustas, por lo que el análisis se limitó a las instituciones de calendario A. En este grupo, se identificaron 50 instituciones oficiales (públicas) y 70 no oficiales (privadas), proporción adecuada para el análisis comparativo planteado en el primer una proporción
 </p>
+```{python}
+#| label: fig-naturaleza
+#| fig-cap: "Distribución de registros según el tipo de clasificación de la institución."
+
+fig, axes = plt.subplots(2, 2, figsize=(6, 5))
+
+variables = {
+    "cole_naturaleza":     "Naturaleza",
+    "cole_area_ubicacion": "Área de ubicación",
+    "cole_calendario":     "Calendario",
+    "cole_jornada":        "Jornada"
+}
+
+for ax, (col, label) in zip(axes.flatten(), variables.items()):
+    orden = df[col].value_counts().index
+    
+    (df[col].value_counts(normalize=True) * 100).loc[orden].plot(
+        kind="barh", ax=ax, color="#4477AA", edgecolor="white"
+    )
+    
+    ax.set_title(label, fontweight="bold")
+    ax.set_xlabel("")
+    ax.set_ylabel("")
+    ax.tick_params(axis="y", rotation=0)
+    sns.despine(ax=ax)
+
+fig.tight_layout()
+plt.show()
+```
+
+
 
 ```{python}
 #| label: fig-oficial-vs-no
 #| fig-cap: "Distribución del puntaje global según naturaleza jurídica de la institución."
+
+
+fig, axes = plt.subplots(2, 2, figsize=(6, 5))
+
+variables = {
+    "cole_naturaleza":     "Naturaleza",
+    "cole_area_ubicacion": "Área de ubicación",
+    "cole_calendario":     "Calendario",
+    "cole_jornada":        "Jornada"
+}
+
 fig = plot_score_distribution(
     df,
     score_col="punt_global",
-    group_col="cole_naturaleza",
+    group_col="cole_calendario",
     title="Distribución del puntaje global: oficial vs. no oficial",
 )
 fig.set_size_inches(5, 4) 
@@ -332,37 +374,104 @@ fig = plot_school_trends(
 La siguiente figura compara la distribución del puntaje global entre instituciones oficiales y no oficiales en el conjunto completo del periodo, sin restricción de jornada ni área de ubicación.
 </p>
 
+
+### Etapa 3: Condiciones socioeconómicas y desempeño
+
 ```{python}
-#| label: fig-naturaleza
-#| fig-cap: "Distribución de registros según el tipo de clasificación de la institución."
-fig, axes = plt.subplots(2, 2, figsize=(6, 6))
+#| label: tbl-descriptivas
 
-variables = {
-    "cole_naturaleza":     "Naturaleza",
-    "cole_area_ubicacion": "Área de ubicación",
-    "cole_jornada":        "Jornada",
-    "cole_caracter":       "Tipo de institución"
-}
+describe_global_score(df).round(2)
+```
 
-for ax, (col, label) in zip(axes.flatten(), variables.items()):
-    orden = df[col].value_counts().index
-    
-    df[col].value_counts().loc[orden].plot(
-        kind="barh", ax=ax, color="#4477AA", edgecolor="white"
-    )
-    
-    ax.set_title(label, fontweight="bold")
-    ax.set_xlabel("")
-    ax.set_ylabel("")
-    ax.tick_params(axis="y", rotation=0)
-    sns.despine(ax=ax)
+```{python}
+#| label: fig-dist-global
+#| fig-cap: "Distribución del puntaje global en el conjunto completo (2015–2025)."
 
+
+fig = plot_score_distribution(df, score_col="punt_global")
+fig.set_size_inches(5, 4) 
 fig.tight_layout()
 plt.show()
 ```
 
+## Resultados
 
-### Etapa 3: Condiciones socioeconómicas y desempeño
+### Tendencia del puntaje por institución (2015–2025)
+
+<p style="text-align: justify;">
+Se analizan las instituciones educativas oficiales, urbanas, calendario A, semestre 2, jornada diurna, con presencia continua en los diez años del periodo. Las tres instituciones con mayor y menor puntaje promedio ponderado se destacan en color; el resto se muestra en gris. La franja azul corresponde al rango intercuartílico anual y la línea negra al promedio ponderado general.
+</p>
+
+```{python}
+#| label: fig-tendencias
+#| fig-cap: "Evolución del puntaje global promedio por institución, 2015–2025."
+
+df_plot, period_stats, labels = build_plot_data(
+    df,
+    semester=2,
+    calendar="A",
+    location="Urbana",
+    grade="Grado 11",
+    nature="Oficial",
+    exclude_shifts=["Sabatina", "Noche"],
+    year_from=2015,
+    year_to=2025,
+    min_years=10,
+    require_consecutive=True,
+    n_highlight=3,
+    by=["anio_prueba", "cole_cod_dane_establecimiento", "cole_nombre_establecimiento"],
+    col_agg="punt_global",
+)
+
+fig = plot_school_trends(
+    df_plot, period_stats, labels,
+    semester=2, calendar="A", location="Urbana",
+    nature="Oficial", year_from=2015, year_to=2025,
+)
+fig.set_size_inches(7, 5) 
+fig.tight_layout()
+plt.show()
+```
+
+### Comparativo oficial vs. no oficial
+
+<p style="text-align: justify;">
+La siguiente figura compara la distribución del puntaje global entre instituciones oficiales y no oficiales en el conjunto completo del periodo, sin restricción de jornada ni área de ubicación.
+</p>
+
+```{python}
+#| label: fig-oficial-vs-no
+#| fig-cap: "Distribución del puntaje global según naturaleza jurídica de la institución."
+
+fig = plot_score_distribution(
+    df,
+    score_col="punt_global",
+    group_col="cole_naturaleza",
+    title="Distribución del puntaje global: oficial vs. no oficial",
+)
+fig.set_size_inches(5, 4) 
+fig.tight_layout()
+plt.show()
+```
+
+```{python}
+#| label: tbl-oficial-vs-no
+
+describe_by_group(df, group_col="cole_naturaleza").round(2)
+```
+
+```{python}
+#| label: fig-boxplot-jornada
+#| fig-cap: "Puntaje global por jornada escolar."
+
+fig = plot_score_by_group(df, group_col="cole_jornada")
+fig.set_size_inches(5, 4) 
+fig.tight_layout()
+plt.show()
+```
+
+### Condiciones socioeconómicas y desempeño
+
 
 <p style="text-align: justify;">
 Se examina la relación entre el estrato socioeconómico del hogar y el puntaje global, como aproximación a las condiciones materiales de los estudiantes.
