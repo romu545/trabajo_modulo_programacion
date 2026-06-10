@@ -10,7 +10,7 @@ it (``plt.show()``) or save it (``fig.savefig(...)``).
 
 Dependencies
 ------------
-matplotlib, seaborn, adjustText (optional – for label repelling)
+matplotlib, seaborn
 """
 
 from __future__ import annotations
@@ -23,13 +23,6 @@ import matplotlib.patches as mpatches
 import matplotlib.ticker as mticker
 import pandas as pd
 import seaborn as sns
-
-# Optional: nicer label placement (pip install adjustText)
-try:
-    from adjustText import adjust_text
-    _ADJUST_TEXT = True
-except ImportError:
-    _ADJUST_TEXT = False
 
 
 # ── Defaults ──────────────────────────────────────────────────────────────────
@@ -85,6 +78,66 @@ def _build_auto_title(
 
     subtitle = "Instituciones " + " · ".join(parts) if parts else ""
     return title, subtitle
+
+
+def _spread_labels_vertically(
+    targets: list[float],
+    min_gap: float,
+    low:     float,
+    high:    float,
+) -> list[float]:
+    """
+    Separate a set of label y-positions so they never overlap.
+
+    Each label wants to sit at its "true" y value (``targets``).  When two
+    labels are closer than ``min_gap`` they are nudged apart, preserving their
+    original vertical order and trying to stay inside the ``[low, high]`` band.
+    This is the same idea behind R's ggrepel / directlabels for end-of-line
+    labels.
+
+    Parameters
+    ----------
+    targets : list of float
+        Desired y-position of each label (e.g. the school's last score).
+    min_gap : float
+        Minimum vertical separation between two consecutive labels, in the
+        same units as *targets*.
+    low, high : float
+        Lower and upper bounds of the plotting band (the y-axis limits).
+
+    Returns
+    -------
+    list of float
+        Adjusted y-positions, in the same order as *targets*.
+    """
+    n = len(targets)
+    if n == 0:
+        return []
+
+    # Sort by desired position, remembering each label's original slot.
+    order = sorted(range(n), key=lambda i: targets[i])
+    ys    = [targets[i] for i in order]
+
+    # Sweep up: push any label that sits too close to the one below it.
+    for i in range(1, n):
+        if ys[i] - ys[i - 1] < min_gap:
+            ys[i] = ys[i - 1] + min_gap
+
+    # If the stack ran past the top, pin the highest label and sweep back down.
+    if ys[-1] > high:
+        ys[-1] = high
+        for i in range(n - 2, -1, -1):
+            if ys[i + 1] - ys[i] < min_gap:
+                ys[i] = ys[i + 1] - min_gap
+
+    # Keep the lowest label inside the band as well.
+    ys[0] = max(ys[0], low)
+
+    # Restore the caller's original ordering.
+    result = [0.0] * n
+    for slot, original_idx in enumerate(order):
+        result[original_idx] = ys[slot]
+    return result
 
 
 # ── Main chart ────────────────────────────────────────────────────────────────
@@ -252,31 +305,10 @@ def plot_school_trends(
         label="Promedio ponderado",
     )
 
-    # ── direct labels ─────────────────────────────────────────────────────────
-
-    # FIX: usar el índice del último año, no el valor del año
-    last_x_idx = len(anio_order) - 1
-
-    text_objects: list[plt.Text] = []
-
-    for _, row in labels.iterrows():
-        name  = row["cole_nombre_establecimiento"]
-        short = textwrap.shorten(name, width=40, placeholder="…")
-        color = hl_palette.get(row["cole_cod_dane_establecimiento"], "black")
-        t = ax.text(
-            last_x_idx + 0.15,   # FIX: índice correcto + pequeño offset
-            row["promedio"],
-            short,
-            fontsize=7.5, color=color, va="center", zorder=5,
-            clip_on=False,
-        )
-        text_objects.append(t)
-
-    if _ADJUST_TEXT and text_objects:
-        adjust_text(text_objects, ax=ax, expand_points=(1.2, 1.8))
-
     # ── axes formatting ───────────────────────────────────────────────────────
-    # FIX: xlim usa índice del último año + espacio para etiquetas
+    # El eje x usa el índice del año (0, 1, 2, …), no el año en sí.  Se parte de
+    # un margen derecho amplio que más abajo se recorta a lo que realmente
+    # ocupan los nombres de los colegios.
     ax.set_xlim(-0.5, len(anio_order) - 1 + 5)
     ax.set_ylim(y_min, y_max)
     ax.set_xticks(range(len(anio_order)))
@@ -291,6 +323,60 @@ def plot_school_trends(
 
     for spine in ax.spines.values():
         spine.set_linewidth(0.4)
+
+    # ── direct labels (one per highlighted school, at the last period) ─────────
+    # Se rotula cada colegio resaltado al final de su línea.  Cuando dos colegios
+    # terminan con puntajes parecidos sus nombres se solaparían, así que se
+    # separan verticalmente conservando el orden (idea de ggrepel / directlabels
+    # de R) y se une cada etiqueta con su línea mediante un trazo delgado.
+    last_x_idx = len(anio_order) - 1
+    label_x    = last_x_idx + 0.20
+
+    rows = list(labels.iterrows())
+    text_objects: list[plt.Text] = [
+        ax.text(
+            label_x, row["promedio"],
+            textwrap.shorten(row["cole_nombre_establecimiento"], width=40, placeholder="…"),
+            fontsize=7.5,
+            color=hl_palette.get(row["cole_cod_dane_establecimiento"], "black"),
+            va="center", zorder=5, clip_on=False,
+        )
+        for _, row in rows
+    ]
+
+    if text_objects:
+        # El hueco mínimo entre etiquetas se toma de la altura real del texto
+        # (en unidades de datos) para que no dependa del tamaño de la figura.
+        fig.canvas.draw()
+        text_px  = text_objects[0].get_window_extent().height
+        inv      = ax.transData.inverted()
+        _, y0_px = inv.transform((0, 0))
+        _, y1_px = inv.transform((0, text_px))
+        min_gap  = abs(y1_px - y0_px) * 1.3
+
+        true_ys   = [row["promedio"] for _, row in rows]
+        spread_ys = _spread_labels_vertically(true_ys, min_gap, y_min, y_max)
+
+        # Reubicar cada etiqueta y unirla con su línea mediante un trazo fino.
+        for t, (_, row), new_y in zip(text_objects, rows, spread_ys):
+            t.set_y(new_y)
+            color = hl_palette.get(row["cole_cod_dane_establecimiento"], "black")
+            ax.plot(
+                [last_x_idx, label_x], [row["promedio"], new_y],
+                color=color, linewidth=0.5, alpha=0.6, zorder=4, clip_on=False,
+            )
+
+        # Recortar el margen derecho para que quede solo el espacio que ocupan
+        # los nombres y la gráfica aproveche el ancho.  Se itera porque al mover
+        # el límite del eje también cambia el ancho (en datos) de cada texto.
+        for _ in range(4):
+            fig.canvas.draw()
+            inv_x      = ax.transData.inverted()
+            right_data = max(
+                inv_x.transform((t.get_window_extent().x1, 0))[0]
+                for t in text_objects
+            )
+            ax.set_xlim(-0.5, right_data + 0.15)
 
     # ── legend ────────────────────────────────────────────────────────────────
     legend_patches = [
@@ -379,6 +465,7 @@ def plot_score_distribution(
 def plot_score_by_group(
     df: pd.DataFrame,
     group_col: str,
+    x: str,
     score_col: str = "punt_global",
     *,
     title: str | None = None,
@@ -411,16 +498,21 @@ def plot_score_by_group(
     >>> fig = plot_score_by_group(df, "cole_jornada")
     >>> plt.show()
     """
+    if x is None:
+        x = group_col
     order = (
-        df.groupby(group_col, observed=True)[score_col]
+        df.groupby(by=group_col, observed=True, as_index=False)[score_col]
         .median()
-        .sort_values(ascending=False)
+        .sort_values(by=x, ascending=True)
         .index.tolist()
     )
 
     fig, ax = plt.subplots(figsize=figsize)
     sns.boxplot(
-        data=df, x=group_col, y=score_col, order=order,
+        data=df, 
+        x=x, 
+        y=score_col, 
+        order=order,
         palette="Blues_d", width=0.5, linewidth=0.8, ax=ax,
         flierprops=dict(marker=".", markersize=2, alpha=0.3),
     )
