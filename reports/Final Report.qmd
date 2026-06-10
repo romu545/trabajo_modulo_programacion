@@ -8,7 +8,7 @@ author:
   - name: "Lozano-Bustamante, Sheimy"
     email: sheimylozanopb@unimagdalena.edu.co
     affiliation: "Universidad del Magdalena"
-  - name: "Benavides, Camilo"
+  - name: "Benavides-Jiménez, Camilo"
     email: cbenavides@unimagdalena.edu.co
     affiliation: "Universidad del Magdalena"
 date: today
@@ -46,16 +46,6 @@ execute:
   warning: false
   message: false
   cache: false
-
-
-# abstract: 
-#     Este documento presenta un análisis exploratorio de los resultados
-#     de las Pruebas Saber 11 en el departamento de Magdalena entre 2015
-#     y 2025, con foco en la evolución del puntaje global por institución,
-#     las diferencias según naturaleza jurídica y la relación entre
-#     condiciones socioeconómicas del hogar y desempeño académico.
-# keywords: [Saber 11, Magdalena, ciencia de datos, educación]
-
 ---
 
 ## Introducción
@@ -94,12 +84,16 @@ Analizar la evolución de los resultados de las Pruebas Saber 11 en las instituc
 
 <p style="text-align: justify;">
 Los datos corresponden a los resultados individuales de las Pruebas Saber 11, publicados por el ICFES en el portal datos.gov. Se utilizaron 22 archivos en formato Parquet, uno por cada período de aplicación, abarcando desde el primer semestre de 2015 hasta el segundo semestre de 2025 (2015-1, 2016-1, ..., 2025-2). Cada archivo fue cargado, limpiado y estandarizado de forma independiente mediante un pipeline modular en Python, estructurado en cuatro etapas:
+</p>
 
+<p style="text-align: justify;">
 1. **Carga**: validación de la estructura de los archivos y selección de columnas de interés según un diccionario de variables.
 2. **Limpieza**: estandarización de campos categóricos (grado, género, jornada, naturaleza), integración de datos institucionales desde un archivo maestro de establecimientos y reordenamiento de columnas.
 3. **Enriquecimiento**: derivación de las columnas `anio_prueba`, `semestre_prueba` y `estu_edad_prueba` a partir del campo `periodo` y la fecha de nacimiento.
 4. **Procesamiento**: filtrado de registros según criterios de análisis (calendario A, área urbana, semestre 2, grado 11, jornadas diurnas) y agregación de datos a nivel institucional por año.
+</p>
 
+<p style="text-align: justify;">
 Posteriormente, los archivos procesados se consolidaron en un único archivo Parquet. Para el análisis de tendencias, se incluyeron exclusivamente las instituciones con presencia continua en todos los años del periodo 2015–2025, garantizando así la comparabilidad longitudinal. Las visualizaciones se generaron con las librerías `matplotlib` y `seaborn`.
 </p>
 
@@ -167,7 +161,7 @@ import matplotlib.ticker as mticker
 import seaborn as sns
 
 from src.enrichement import add_period_columns
-from src.process import build_plot_data
+from src.process import build_plot_data, filter_data
 from src.viz import plot_school_trends, plot_score_distribution, plot_score_by_group
 from src.analysis import describe_global_score, describe_by_group, missing_summary
 
@@ -175,6 +169,7 @@ sns.set_theme(style="whitegrid", font_scale=1.05)
 
 df_origin = pd.read_parquet('../data/processed/result_saber_11_clean.parquet')
 df = add_period_columns(df_origin)
+
 ```
 
 
@@ -202,7 +197,7 @@ Los valores faltantes muestra que la mayoría de las variables presentan porcent
 missing_summary(df).query("n_missing > 0")
 ```
 
-**Distribución por caracteristicas institucinales**
+**Distribución por caracteristicas institucionales**
 
 <p style="text-align: justify;">
 La mañana concentra la mayor proporción de estudiantes evaluados, con más de 32.000 registros, seguida de la tarde, con cerca de 16.000. Las jornadas única y nocturna presentan recuentos intermedios de aproximadamente 8.000 y 7.000, respectivamente, mientras que las jornadas completa y sabatina registran una participación marginal. Esta distribución evidencia la predominancia histórica del modelo de doble jornada en las instituciones educativas del Distrito de Santa Marta.
@@ -245,93 +240,47 @@ fig.tight_layout()
 plt.show()
 ```
 
+**Muestra final de análisis**
 
+<p style="text-align: justify;">
+Aplicando conjuntamente los criterios de área urbana, del calendario A y jornada diurna, la muestra final incluyó 119 instituciones urbanas, excluyendo las 2 rurales del calendario A. Este subconjunto garantiza la homogeneidad contextual necesaria para comparar instituciones oficiales y analizar tendencias temporales y condiciones socioeconómicas, sobre una base poblacional coherente y representativa del sistema educativo formal del Distrito de Santa Marta.
+</p>
 
 ```{python}
 #| label: fig-oficial-vs-no
 #| fig-cap: "Distribución del puntaje global según naturaleza jurídica de la institución."
 
 
-fig, axes = plt.subplots(2, 2, figsize=(6, 5))
+fig, axes = plt.subplots(2, 2, figsize=(12, 8))
+axes = axes.flatten()
 
 variables = {
     "cole_naturaleza":     "Naturaleza",
     "cole_area_ubicacion": "Área de ubicación",
     "cole_calendario":     "Calendario",
-    "cole_jornada":        "Jornada"
+    "cole_jornada":        "Jornada",
 }
 
-fig = plot_score_distribution(
-    df,
-    score_col="punt_global",
-    group_col="cole_calendario",
-    title="Distribución del puntaje global: oficial vs. no oficial",
-)
-fig.set_size_inches(5, 4) 
+for ax, (col, titulo) in zip(axes, variables.items()):
+    for grupo in sorted(df[col].dropna().unique()):
+        datos = df.loc[df[col] == grupo, "punt_global"].dropna()
+        sns.kdeplot(data=datos, ax=ax, fill=True, alpha=0.35,
+                    linewidth=1.5, label=str(grupo))
+    ax.set_title(titulo, fontsize=12, fontweight="bold")
+    ax.set_xlabel("Puntaje global", fontsize=9)
+    ax.set_ylabel("Densidad", fontsize=9)
+    ax.legend(fontsize=8, framealpha=0.7)
+    ax.grid(linestyle=":", linewidth=0.4, color="#CCCCCC")
+    sns.despine(ax=ax)
+
+fig.suptitle("Distribución del puntaje global", fontsize=13, fontweight="bold")
 fig.tight_layout()
 plt.show()
 ```
-
-```{python}
-#| label: tbl-oficial-vs-no
-describe_by_group(df, group_col="cole_naturaleza").round(2)
-```
-
-* **Muestra final de análisis**
-
-<p style="text-align: justify;">
-Aplicando conjuntamente los criterios de área urbana, del calendario A y jornada diurna, la muestra final incluyó 119 instituciones urbanas, excluyendo las 2 rurales del calendario A. Este subconjunto garantiza la homogeneidad contextual necesaria para comparar instituciones oficiales y no oficiales y analizar tendencias temporales y condiciones socioeconómicas, sobre una base poblacional coherente y representativa del sistema educativo formal del Distrito de Santa Marta.
-</p>
 
 ## Resultados
 
-
 Los siguientes resultados seran organizado por etapas que estan directamente relacionados con los objetivos especificos del informe. Asimismo, se realizó un analisis estadistico descriptivo del dataset final seleccionado en la sección anterior.
-
-### Analisis estadistico descriptivo del puntaje global
-
-```{python}
-#| label: tbl-descriptivas
-describe_global_score(df).round(2)
-```
-
-```{python}
-#| label: fig-dist-global
-#| fig-cap: "Distribución del puntaje global en el conjunto completo (2015–2025)."
-
-fig = plot_score_distribution(df, score_col="punt_global")
-fig.set_size_inches(5, 4) 
-fig.tight_layout()
-plt.show()
-```
-
-### Distribucion de estudiantes por año
-
-```{python}
-#| label: fig-estudiantes-anio
-#| fig-cap: "Número de estudiantes registrados por año de aplicación."
-
-conteo = df.groupby("anio_prueba").size().reset_index(name="n_estudiantes")
-conteo["anio_prueba"] = conteo["anio_prueba"].astype(str)
-
-f, ax = plt.subplots(figsize=(7, 5))
-
-sns.barplot(
-    x="n_estudiantes",
-    y="anio_prueba",
-    data=conteo,
-    color="#4477AA",
-    orient="h"
-)
-
-ax.set(
-    ylabel="Año de aplicación",
-    xlabel="Estudiantes registrados"
-)
-
-sns.despine(left=True, bottom=True)
-plt.show()
-```
 
 
 ### Etapa 1:Tendencia del puntaje por institución (2015–2025)
@@ -349,7 +298,7 @@ df_plot, period_stats, labels = build_plot_data(
     calendar="A",
     location="Urbana",
     grade="Grado 11",
-    nature="Oficial",
+    nature=['Oficial', 'No oficial'],
     exclude_shifts=["Sabatina", "Noche"],
     year_from=2015,
     year_to=2025,
@@ -361,90 +310,47 @@ df_plot, period_stats, labels = build_plot_data(
 )
 
 fig = plot_school_trends(
-    df_plot, period_stats, labels,
-    semester=2, calendar="A", location="Urbana",
-    nature="Oficial", year_from=2015, year_to=2025,
+    df_plot, 
+    period_stats, 
+    labels,
+    semester=2, 
+    calendar="A", 
+    location="Urbana",
+    nature=['Oficial', 'No oficial'], 
+    year_from=2015, 
+    year_to=2025,
     figsize=(10, 5.5),
 )
+plt.show()
 ```
 
 ### Etapa 2: Comparativo oficial vs. no oficial
 
-<p style="text-align: justify;">
-La siguiente figura compara la distribución del puntaje global entre instituciones oficiales y no oficiales en el conjunto completo del periodo, sin restricción de jornada ni área de ubicación.
-</p>
-
-
-### Etapa 3: Condiciones socioeconómicas y desempeño
-
 ```{python}
-#| label: tbl-descriptivas
-
-describe_global_score(df).round(2)
-```
-
-```{python}
-#| label: fig-dist-global
-#| fig-cap: "Distribución del puntaje global en el conjunto completo (2015–2025)."
-
-
-fig = plot_score_distribution(df, score_col="punt_global")
-fig.set_size_inches(5, 4) 
-fig.tight_layout()
-plt.show()
-```
-
-## Resultados
-
-### Tendencia del puntaje por institución (2015–2025)
-
-<p style="text-align: justify;">
-Se analizan las instituciones educativas oficiales, urbanas, calendario A, semestre 2, jornada diurna, con presencia continua en los diez años del periodo. Las tres instituciones con mayor y menor puntaje promedio ponderado se destacan en color; el resto se muestra en gris. La franja azul corresponde al rango intercuartílico anual y la línea negra al promedio ponderado general.
-</p>
-
-```{python}
-#| label: fig-tendencias
-#| fig-cap: "Evolución del puntaje global promedio por institución, 2015–2025."
-
-df_plot, period_stats, labels = build_plot_data(
+df_filter = filter_data(
     df,
     semester=2,
     calendar="A",
     location="Urbana",
     grade="Grado 11",
-    nature="Oficial",
+    nature=['Oficial', 'No oficial'],
     exclude_shifts=["Sabatina", "Noche"],
     year_from=2015,
     year_to=2025,
-    min_years=10,
-    require_consecutive=True,
-    n_highlight=3,
-    by=["anio_prueba", "cole_cod_dane_establecimiento", "cole_nombre_establecimiento"],
-    col_agg="punt_global",
 )
-
-fig = plot_school_trends(
-    df_plot, period_stats, labels,
-    semester=2, calendar="A", location="Urbana",
-    nature="Oficial", year_from=2015, year_to=2025,
-)
-fig.set_size_inches(7, 5) 
-fig.tight_layout()
-plt.show()
 ```
 
-### Comparativo oficial vs. no oficial
 
 <p style="text-align: justify;">
-La siguiente figura compara la distribución del puntaje global entre instituciones oficiales y no oficiales en el conjunto completo del periodo, sin restricción de jornada ni área de ubicación.
+La siguiente figura compara la distribución del puntaje global entre instituciones oficiales y no oficiales en el conjunto completo del periodo.
 </p>
 
 ```{python}
-#| label: fig-oficial-vs-no
+#| label: fig-oficial-vs-no_2
 #| fig-cap: "Distribución del puntaje global según naturaleza jurídica de la institución."
 
 fig = plot_score_distribution(
-    df,
+    df_filter,
     score_col="punt_global",
     group_col="cole_naturaleza",
     title="Distribución del puntaje global: oficial vs. no oficial",
@@ -457,21 +363,12 @@ plt.show()
 ```{python}
 #| label: tbl-oficial-vs-no
 
-describe_by_group(df, group_col="cole_naturaleza").round(2)
+describe_by_group(
+    df_filter, 
+    group_col="cole_naturaleza").round(2)
 ```
 
-```{python}
-#| label: fig-boxplot-jornada
-#| fig-cap: "Puntaje global por jornada escolar."
-
-fig = plot_score_by_group(df, group_col="cole_jornada")
-fig.set_size_inches(5, 4) 
-fig.tight_layout()
-plt.show()
-```
-
-### Condiciones socioeconómicas y desempeño
-
+### Etapa 3: Condiciones socioeconómicas y desempeño
 
 <p style="text-align: justify;">
 Se examina la relación entre el estrato socioeconómico del hogar y el puntaje global, como aproximación a las condiciones materiales de los estudiantes.
@@ -481,7 +378,7 @@ Se examina la relación entre el estrato socioeconómico del hogar y el puntaje 
 #| label: fig-estrato
 #| fig-cap: "Puntaje global promedio por estrato socioeconómico."
 fig = plot_score_by_group(
-    df.dropna(subset=["fami_estratovivienda"]),
+    df_filter.dropna(subset=["fami_estratovivienda"]),
     group_col="fami_estratovivienda",
     title="Puntaje global por estrato socioeconómico",
 )
@@ -492,13 +389,6 @@ plt.show()
 
 ```
 
-```{python}
-#| label: tbl-estrato
-describe_by_group(
-    df.dropna(subset=["fami_estratovivienda"]),
-    group_col="fami_estratovivienda"
-).round(2)
-```
 
 ```{python}
 #| label: fig-educacion-madre
@@ -539,7 +429,7 @@ plt.show()
 ```
 
 <p style="text-align: justify;">
-Los resultados muestran una relación positiva entre el nivel educativo del hogar y el desempeño en la prueba, consistente con lo reportado en la literatura sobre factores asociados al logro académico en Colombia.
+Los resultados muestran una relación positiva entre el nivel educativo de la madre y el desempeño en la prueba, consistente con lo reportado en la literatura sobre factores asociados al logro académico en Colombia.
 </p>
 
 ## Analisis de resultados

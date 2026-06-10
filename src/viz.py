@@ -304,11 +304,11 @@ def plot_school_trends(
     fig.suptitle(title, fontsize=13, fontweight="bold", y=0.99)
     ax.set_title(subtitle, fontsize=9.5, color="#444444", pad=4)
 
-    caption = (
-        "Línea negra: promedio ponderado general  ·  "
-        f"Franja azul: rango intercuartílico {int(ribbon_quantiles[0]*100)}-{int(ribbon_quantiles[1]*100)}"
-    )
-    fig.text(0.01, -0.01, caption, fontsize=8, color="#666666", ha="left")
+    # caption = (
+    #     "Línea negra: promedio ponderado general  ·  "
+    #     f"Franja azul: rango intercuartílico {int(ribbon_quantiles[0]*100)}-{int(ribbon_quantiles[1]*100)}"
+    # )
+    # fig.text(0.01, -0.01, caption, fontsize=8, color="#666666", ha="left")
 
     fig.tight_layout()
     return fig
