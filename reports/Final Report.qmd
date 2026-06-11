@@ -258,7 +258,7 @@ Los siguientes resultados seran organizado por etapas que estan directamente rel
 ### Etapa 1:Tendencia del puntaje por institución (2015–2025)
 
 <p style="text-align: justify;">
- Las tres instituciones con mayor y menor puntaje promedio ponderado se destacan en color; el resto se muestra en gris. La franja azul corresponde al rango intercuartílico anual y la línea negra al promedio ponderado general.
+ La Figura 3 muestra la evolución del puntaje global promedio por institución entre 2015 y 2025, destacando principalmente a las instituciones con mayor y menor desempeño en comparación con el resto. La Tabla 3 complementa esta lectura con el promedio ponderado anual y el rango intercuartílico (P25–P75) de cada año del periodo. En general, el promedio ponderado del puntaje global mostró una tendencia levemente creciente, pasando de 242.3 puntos en 2015 a 258.2 puntos en 2025, un incremento acumulado de aproximadamente 16 puntos. Sin embargo, esta tendencia no fue monotónica. Se observaron descensos en 2018 (244.7) y 2019 (243.3) respecto al valor de 2016 (251.9), así como en 2021 (243.6), año que coincide con la alteración académica derivada de la pandemia de COVID-19. A partir de 2022, los promedios retomaron una trayectoria ascendente sostenida, alcanzando sus valores más altos en 2024 y 2025. El rango intercuartílico presentó variaciones moderadas entre años, con valores de 30.7 a 47.6 puntos, reflejando una dispersión relativamente estable del desempeño institucional a lo largo del tiempo.
 </p>
 
 ```{python}
@@ -521,14 +521,3 @@ El análisis de los resultados de las Pruebas Saber 11 en Magdalena durante el p
 <p style="text-align: justify;">
 Estos hallazgos son consistentes con la literatura nacional sobre calidad educativa y equidad, y ofrecen una base para análisis más detallados a nivel de institución o municipio.
 </p>
-
-## Referencias
-
-
-1.	Glosario ICFES – ICFES. (s. f.). https://www.icfes.gov.co/atencion-y-servicios-a-la-ciudadania/glosario-icfes/
-2.	Instituto Colombiano para la Evaluación de la Educación- ICFES. (2025). ¿Cuáles son los objetivos del examen Saber 11°? – ICFES. (s. f.). https://www.icfes.gov.co/evaluaciones-icfes/saber-11/cuales_son_los_objetivos_del_examen_saber_11/ 
-3.	Congreso de Colombia.(2009).Ley 1324 de 2009 “Por la cual se fijan parámetros y criterios para organizar el sistema de evaluación de resultados de la calidad de la educación, se dictan normas para el fomento de una cultura de la evaluación, en procura de facilitar la inspección y vigilancia del Estado y se transforma el ICFES.”
-4.	Presidencia de la República de Colombia. (2010).Decreto 869 de 2010 “Por el cual se reglamenta el Examen de Estado de la Educación Media, ICFES SABER 11°”
-5.	ICFES: Mejor saber - Ministerio de Educación Nacional de Colombia (s. f.). https://www.mineducacion.gov.co/1621/article-241784.html 
-6.	 American University of Europe -UNADE. (2025). ICFES y su Importancia en Colombia. Universidad Americana de Europa. https://unade.edu.mx/icfes-y-su-importancia-en-colombia/ 
-7. Alcaldía Mayor de Bogotá. (2014, 24 de febrero). A partir del segundo semestre de 2014, la prueba SABER 11° se modifica. https://bogota.gov.co/mi-ciudad/educacion/partir-del-segundo-semestre-de-2014-la-prueba-saber-11deg-se-modifica
