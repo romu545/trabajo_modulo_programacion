@@ -508,6 +508,64 @@ plt.show()
 Los resultados muestran una relación positiva entre el nivel educativo de la madre y el desempeño en la prueba, consistente con lo reportado en la literatura sobre factores asociados al logro académico en Colombia.
 </p>
 
+<p style="text-align: justify;">
+Para resumir la relación de todas las condiciones socioeconómicas con el puntaje, calculamos la correlación de Spearman de cada variable con el puntaje global. Usamos Spearman porque las variables son ordinales (estrato, nivel educativo, número de libros, tenencia de bienes) y no numéricas continuas.
+</p>
+
+```{python}
+#| label: tbl-correlaciones
+#| tbl-cap: "Correlación de Spearman entre las condiciones socioeconómicas y el puntaje global."
+
+# Pasamos las variables ordinales a números para poder correlacionarlas
+educ_a_numero    = {nivel: i for i, nivel in enumerate(orden_educ)}
+estrato_a_numero = {"Sin Estrato": 0, "Estrato 1": 1, "Estrato 2": 2, "Estrato 3": 3,
+                    "Estrato 4": 4, "Estrato 5": 5, "Estrato 6": 6}
+libros_a_numero  = {"0 A 10 LIBROS": 0, "11 A 25 LIBROS": 1,
+                    "26 A 100 LIBROS": 2, "MÁS DE 100 LIBROS": 3}
+
+datos_se = pd.DataFrame({
+    "Estrato":          df_filter["fami_estratovivienda"].map(estrato_a_numero),
+    "Educación madre":  df_filter["fami_educacionmadre"].map(educ_a_numero),
+    "Educación padre":  df_filter["fami_educacionpadre"].map(educ_a_numero),
+    "Número de libros": df_filter["fami_numlibros"].map(libros_a_numero),
+    "Tiene internet":   df_filter["fami_tieneinternet"].astype(float),
+    "Tiene computador": df_filter["fami_tienecomputador"].astype(float),
+    "Tiene automóvil":  df_filter["fami_tieneautomovil"].astype(float),
+    "Puntaje global":   df_filter["punt_global"],
+})
+
+# Correlación de cada variable con el puntaje, de mayor a menor
+correlaciones = (
+    datos_se.corr(method="spearman")["Puntaje global"]
+    .drop("Puntaje global")
+    .sort_values(ascending=False)
+    .round(3)
+    .to_frame("Correlación con el puntaje")
+)
+correlaciones
+```
+
+<p style="text-align: justify;">
+Todas las correlaciones son positivas: a mejores condiciones socioeconómicas, mayor es el puntaje global. El nivel educativo de los padres es el factor más asociado al desempeño, seguido por los bienes del hogar (computador, internet, automóvil), el número de libros y el estrato.
+</p>
+
+#### Test de Hipotesis
+De forma similar a la Etapa 2, comprobamos si contar con internet en el hogar se asocia con un mejor puntaje. Partimos de la hipótesis nula de que la media de los estudiantes con y sin internet es la misma; si la rechazamos, habrá una diferencia significativa con un $95\%$ de confianza:
+$$
+H_0: \mu_{con} = \mu_{sin}
+$$
+$$
+H_1: \mu_{con} \ne \mu_{sin}
+$$
+
+```{python}
+_con_internet = df_filter[df_filter.fami_tieneinternet == True]["punt_global"]
+_sin_internet = df_filter[df_filter.fami_tieneinternet == False]["punt_global"]
+_et3_tt = pg.ttest(_con_internet, _sin_internet)
+```
+
+La prueba de hipotesis nos da un P-value de `{python} str(_et3_tt['p_val'].iloc[0])`, el cual es menor a $\alpha = 0.05$, por lo que rechazamos la hipótesis nula. El T-value es positivo, lo cual indica que el primer grupo es mayor al segundo: el primer grupo son los estudiantes con internet y el segundo los que no lo tienen, es decir, contar con internet en el hogar se asocia con puntajes más altos.
+
 ## Analisis de resultados
 
 aca se analizaran los resultados con bibliografia
