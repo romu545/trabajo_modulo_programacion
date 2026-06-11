@@ -352,6 +352,8 @@ La prueba de hipotesis nos da un P-value de `{python} str(_et1_tt['p_val'].iloc[
 
 ### Etapa 2: Comparativo oficial vs. no oficial
 
+La Figura 4 muestra la distribución del puntaje global entre instituciones oficiales y no oficiales para el conjunto completo del periodo. La distribución de las instituciones oficiales presenta una concentración en valores más bajos, con una media de 242.02 puntos, mientras que las instituciones no oficiales muestran una distribución desplazada hacia la derecha, con una media de 274.96 puntos. 
+
 ```{python}
 df_filter = filter_data(
     df,
@@ -368,7 +370,7 @@ df_filter = filter_data(
 
 
 <p style="text-align: justify;">
-La siguiente figura compara la distribución del puntaje global entre instituciones oficiales y no oficiales en el conjunto completo del periodo.
+La siguiente figura compara la distribución del puntaje global entre instituciones oficiales y no oficiales en el conjunto completo del periodo.En ella,las instituciones no oficiales registran una mediana de 277.0 puntos y un rango intercuartílico de 73.0, frente a una mediana de 238.0 puntos y un IQR de 63.0 en las instituciones oficiales
 </p>
 
 ```{python}
@@ -395,7 +397,7 @@ describe_by_group(
 ```
 
 #### Test de Hipotesis
-Haremos una prueba de Hipotesis y haremos una diferencia de medias para ver si los resultados entre las instituciones oficiales y no oficiales presentan una diferencia significativa, para ello partiremos de la hipótesis nula que ambas medias son iguales, si descartamos la hipótesis alternativa entonces podrémos afirmar que no hay diferencia significativa entre los estudiantes de instituciones oficiales y no oficiales con un $95\%$ de confianza:
+Haremos una prueba de Hipotesis y una diferencia de medias para ver si los resultados entre las instituciones oficiales y no oficiales presentan una diferencia significativa, para ello partiremos de la hipótesis nula que ambas medias son iguales, si descartamos la hipótesis alternativa entonces podrémos afirmar que no hay diferencia significativa entre los estudiantes de instituciones oficiales y no oficiales con un $95\%$ de confianza:
 $$
 H_0: \mu_0 = \mu_1
 $$
@@ -415,6 +417,8 @@ La prueba de hipotesis nos da un P-value de `{python} str(_et2_tt['p_val'].iloc[
 
 <p style="text-align: justify;">
 Se examina la relación entre el estrato socioeconómico del hogar y el puntaje global, diferenciando además entre instituciones oficiales y no oficiales, como aproximación a las condiciones materiales de los estudiantes.
+
+La Figura 5 muestra la distribución del puntaje global según el estrato socioeconómico del hogar,diferenciando entre instituciones oficiales y no oficiales. En ambos grupos se observa una tendencia positiva: a medida que aumenta el estrato, los puntajes medianos tienden a ser más altos. Las instituciones no oficiales registran puntajes superiores a las oficiales en todos los estratos, y esta brecha se mantiene a lo largo de toda la escala socioeconómica.
 </p>
 
 ```{python}
@@ -459,6 +463,10 @@ fig.tight_layout()
 plt.show()
 ```
 
+La Figura 6 presenta la distribución del puntaje global según el nivel educativo de la madre. 
+Los resultados muestran una relación positiva entre esta variable y el desempeño en la prueba: 
+los estudiantes cuyas madres alcanzaron niveles educativos más altos como educación profesional 
+completa o posgrado tienden a obtener puntajes más elevados. Esta tendencia es consistente tanto en instituciones oficiales como no oficiales, aunque las no oficiales mantienen puntajes medianos superiores en todos los niveles educativos.
 
 ```{python}
 #| label: fig-educacion-madre
@@ -505,11 +513,7 @@ plt.show()
 ```
 
 <p style="text-align: justify;">
-Los resultados muestran una relación positiva entre el nivel educativo de la madre y el desempeño en la prueba, consistente con lo reportado en la literatura sobre factores asociados al logro académico en Colombia.
-</p>
-
-<p style="text-align: justify;">
-Para resumir la relación de todas las condiciones socioeconómicas con el puntaje, calculamos la correlación de Spearman de cada variable con el puntaje global. Usamos Spearman porque las variables son ordinales (estrato, nivel educativo, número de libros, tenencia de bienes) y no numéricas continuas.
+Para resumir la relación entre el conjunto de condiciones socioeconómicas y el puntaje global, se calculó la correlación de Spearman de cada variable con el puntaje global, dado que las variables son de naturaleza ordinal estrato, nivel educativo, número de libros, tenencia de bienes y no continuas. La Tabla 5 presenta los resultados. Todas las correlaciones son positivas, lo que indica que mejores condiciones socioeconómicas se asocian con puntajes más altos. El nivel educativo de la madre es el factor con mayor correlación (0.321), seguido por el nivel educativo del padre (0.294), la tenencia de computador (0.213), el número de libros en el hogar (0.210), el estrato (0.192), la tenencia de internet (0.191) y la tenencia de automóvil (0.174).
 </p>
 
 ```{python}
@@ -568,14 +572,25 @@ La prueba de hipotesis nos da un P-value de `{python} str(_et3_tt['p_val'].iloc[
 
 ## Analisis de resultados
 
-aca se analizaran los resultados con bibliografia
+<p style="text-align: justify;">
+
+Los resultados obtenidos en las tres etapas del análisis son consistentes con los hallazgos reportados en la literatura sobre calidad educativa y equidad en Colombia. En cuanto a la tendencia temporal, el incremento sostenido del puntaje global promedio entre 2015 y 2025, estadísticamente significativo, sugiere una mejora gradual en el rendimiento académico de las instituciones urbanas del calendario A en Santa Marta [@icfes_aumento_puntaje_2024].
+
+No obstante, las variaciones en los años observados, particularmente el descenso registrado en 2021, son coherentes con los efectos documentados de la pandemia de COVID-19 sobre los sistemas educativos en América Latina [@reimers_oportunidades_2021;@pnud_matricula_deteriorada;@unesco_respuestas_educativas]. Estos efectos se tradujeron en dificultades de aprendizaje e interrupciones en la continuidad escolar. Respecto a las diferencias entre instituciones oficiales y no oficiales, la brecha de aproximadamente 33 puntos en el puntaje promedio a favor de las instituciones no oficiales es consistente con los patrones reportados a nivel nacional en los informes del ICFES [@icfes_informe_evaluaciones_2021]. Esta diferencia ha sido atribuida en la literatura a factores como la disponibilidad de recursos físicos y humanos, las condiciones de infraestructura escolar y la composición socioeconómica del estudiantado que accede a cada tipo de institución [@icfes_informe_evaluaciones_2021]. 
+
+En relación con las condiciones socioeconómicas, los resultados confirman que el nivel educativo de los padres, el acceso a bienes tecnológicos en el hogar y el estrato socioeconómico se asocian positivamente con el desempeño en la prueba [@alderete_formichella_acceso_2015;@botero_relacion_acceso;@arias_carreno_influence_2014]. La mayor correlación correspondió al nivel educativo de la madre, lo que es coherente con estudios que señalan el capital educativo del hogar como uno de los predictores más robustos del logro académico en contextos latinoamericanos [@arias_carreno_influence_2014;@gomez_gutierrez_hassan_determinantes_2010].
+
+Asimismo, la diferencia significativa en los puntajes entre estudiantes con y sin acceso a internet refleja las desigualdades en el acceso a herramientas de apoyo al aprendizaje, aspecto que se ha vuelto especialmente relevante en el contexto posterior a la pandemia [@alderete_formichella_acceso_2015;@icfes_informe_evaluaciones_2021].
+
+En conjunto, los tres hallazgos apuntan a que el desempeño en las pruebas Saber 11 en Santa Marta no depende exclusivamente de factores escolares, sino que está fuertemente mediado por las condiciones socioeconómicas y familiares del estudiante, lo que plantea desafíos estructurales para la reducción de brechas educativas en el distrito
+</p>
 
 ## Conclusiones
 
 <p style="text-align: justify;">
-El análisis de los resultados de las Pruebas Saber 11 en Magdalena durante el periodo 2015–2025 permite identificar tres hallazgos principales. Primero, los puntajes promedio de las instituciones oficiales urbanas del calendario A presentan variaciones interanuales moderadas, sin una tendencia sostenida de mejora o deterioro en el conjunto, aunque con diferencias importantes entre instituciones individuales. Segundo, las instituciones no oficiales registran puntajes promedio consistentemente superiores a las oficiales, diferencia que se mantiene estable a lo largo del periodo. Tercero, existe una relación positiva entre las condiciones socioeconómicas del hogar —aproximadas por estrato y nivel educativo de los padres— y el desempeño en la prueba, lo que sugiere que factores externos a la escuela inciden de manera relevante en los resultados.
-</p>
 
-<p style="text-align: justify;">
-Estos hallazgos son consistentes con la literatura nacional sobre calidad educativa y equidad, y ofrecen una base para análisis más detallados a nivel de institución o municipio.
+El presente estudio analizó la evolución de los resultados de las pruebas Saber 11 en instituciones educativas urbanas del Calendario A de Santa Marta entre 2015 y 2025, abordando tendencias temporales, diferencias institucionales y factores socioeconómicos asociados al desempeño. Se observó un incremento estadísticamente significativo en el puntaje global promedio, de 242.3 puntos en 2015 a 258.2 en 2025, aunque con descensos interanuales, especialmente en 2021 debido a la pandemia por COVID-19. Desde 2022, los promedios han retomado una tendencia ascendente sostenida. Las instituciones no oficiales obtuvieron puntajes promedio superiores a las oficiales (274.96 frente a 242.02 puntos), con una diferencia estadísticamente significativa y estable durante todo el periodo, lo que indica desigualdades estructurales. Todas las variables socioeconómicas analizadas mostraron correlaciones positivas con el puntaje global. El nivel educativo de la madre fue el factor más asociado al desempeño (correlación de Spearman de 0.321), seguido por el nivel educativo del padre y la tenencia de bienes tecnológicos en el hogar. Los estudiantes con acceso a internet obtuvieron puntajes significativamente más altos que quienes no cuentan con este recurso. 
+
+En conjunto, los resultados muestran que el rendimiento en las pruebas Saber 11 en Santa Marta está fuertemente influido por factores externos a la escuela. Por tanto, las intervenciones centradas únicamente en el ámbito escolar tienen un alcance limitado para reducir las brechas de desempeño. Es fundamental atender las condiciones socioeconómicas y familiares del estudiante para avanzar hacia una mayor equidad educativa en el distrito.
+
 </p>
