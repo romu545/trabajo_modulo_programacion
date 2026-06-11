@@ -296,6 +296,60 @@ fig = plot_school_trends(
 plt.show()
 ```
 
+<p style="text-align: justify;">
+La siguiente tabla resume, por año, el promedio ponderado del puntaje global y su rango intercuartílico (P25–P75), que corresponden a la línea negra y a la franja azul de la figura anterior.
+</p>
+
+```{python}
+#| label: tbl-period-stats
+#| tbl-cap: "Resumen anual del puntaje global: promedio ponderado y rango intercuartílico (2015–2025)."
+tabla_periodo = period_stats.sort_values("anio_prueba")[
+    ["anio_prueba", "promedio", "p25", "p75"]
+].copy()
+tabla_periodo["IQR"] = tabla_periodo["p75"] - tabla_periodo["p25"]
+tabla_periodo = (
+    tabla_periodo
+    .rename(columns={
+        "anio_prueba": "Año",
+        "promedio":    "Promedio ponderado",
+        "p25":         "P25",
+        "p75":         "P75",
+    })
+    .round(1)
+    .set_index("Año")
+)
+tabla_periodo
+```
+
+#### Test de Hipotesis
+Para complementar la lectura visual, contrastamos si el puntaje global cambió entre el inicio y el final del periodo. Comparamos mediante una diferencia de medias los puntajes de **2015** y **2025**, partiendo de la hipótesis nula de que ambas medias son iguales; si la rechazamos, podremos afirmar que el puntaje cambió de forma significativa con un $95\%$ de confianza:
+$$
+H_0: \mu_{2015} = \mu_{2025}
+$$
+$$
+H_1: \mu_{2015} \ne \mu_{2025}
+$$
+
+```{python}
+# Mismo subconjunto de análisis de la Etapa 2 (grado 11, urbana, calendario A, semestre 2)
+df_filter = filter_data(
+    df,
+    semester=2,
+    calendar="A",
+    location="Urbana",
+    grade="Grado 11",
+    nature=['Oficial', 'No oficial'],
+    exclude_shifts=["Sabatina", "Noche"],
+    year_from=2015,
+    year_to=2025,
+)
+_punt_2015 = df_filter[df_filter.anio_prueba == 2015]["punt_global"]
+_punt_2025 = df_filter[df_filter.anio_prueba == 2025]["punt_global"]
+_et1_tt = pg.ttest(_punt_2015, _punt_2025)
+```
+
+La prueba de hipotesis nos da un P-value de `{python} str(_et1_tt['p_val'].iloc[0])`, el cual es mucho menor a $\alpha = 0.05$, lo que nos permite rechazar la hipótesis nula. Además, el T-value es negativo, lo cual indica que el primer grupo es menor al segundo grupo: el primer grupo es 2015 y el segundo es 2025, es decir, el puntaje global promedio aumentó de forma significativa entre el inicio y el final del periodo.
+
 ### Etapa 2: Comparativo oficial vs. no oficial
 
 ```{python}
