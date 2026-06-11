@@ -14,6 +14,8 @@ author:
 date: today
 date-format: "D [de] MMMM [de] YYYY"
 lang: es
+bibliography: Reference.bib
+csl: https://www.zotero.org/styles/ieee
 
 jupyter: python3
 
@@ -46,7 +48,7 @@ format:
         </style>
 
 execute:
-  echo: true
+  echo: false
   warning: false
   message: false
   cache: false
@@ -55,15 +57,15 @@ execute:
 ## Introducción
 
 <p style="text-align: justify;">
-Las pruebas Saber 11 son evaluaciones estandarizadas administradas por el Instituto Colombiano para la Evaluación de la Educación (ICFES), dirigidas a estudiantes que finalizan la educación media en Colombia. Su objetivo principal es medir las competencias al término del grado undécimo y generar información para monitorear la calidad educativa y el acceso a la educación superior. La prueba se aplica periódicamente mediante preguntas de selección múltiple en áreas del conocimiento definidas por el ICFES, y entrega un puntaje global y resultados por área específica [1, 2, 3].
+Las pruebas Saber 11 son evaluaciones estandarizadas administradas por el Instituto Colombiano para la Evaluación de la Educación (ICFES), dirigidas a estudiantes que finalizan la educación media en Colombia. Su objetivo principal es medir las competencias al término del grado undécimo y generar información para monitorear la calidad educativa y el acceso a la educación superior. La prueba se aplica periódicamente mediante preguntas de selección múltiple en áreas del conocimiento definidas por el ICFES, y entrega un puntaje global y resultados por área específica [@icfes_glosario; @icfes_objetivos; @congreso_ley1324].
 </p>
 
 <p style="text-align: justify;">
-El marco normativo que regula el sistema de evaluación educativa en Colombia se fundamenta en la Ley 1324 de 2009 y el Decreto 869 de 2010. La Ley 1324 transformó el ICFES y lo consolidó como la entidad adscrita al Ministerio de Educación Nacional responsable de la aplicación de los exámenes de Estado y de la generación de mediciones orientadas al seguimiento de la calidad educativa. Asimismo, estableció la obligatoriedad de las evaluaciones oficiales al finalizar la educación media y la educación superior, y definió sus resultados como herramienta para la inspección, la vigilancia y el mejoramiento de la calidad. Por su parte, el Decreto 869 de 2010 reglamentó específicamente el Examen de Estado de la Educación Media Saber 11, y estableció su presentación como requisito de ingreso a programas de pregrado en instituciones de educación superior [3, 4, 5, 6].
+El marco normativo que regula el sistema de evaluación educativa en Colombia se fundamenta en la Ley 1324 de 2009 y el Decreto 869 de 2010. La Ley 1324 transformó el ICFES y lo consolidó como la entidad adscrita al Ministerio de Educación Nacional responsable de la aplicación de los exámenes de Estado y de la generación de mediciones orientadas al seguimiento de la calidad educativa. Asimismo, estableció la obligatoriedad de las evaluaciones oficiales al finalizar la educación media y la educación superior. Asimismo, definió sus resultados como herramienta para la inspección, la vigilancia y el mejoramiento de la calidad. Por su parte, el Decreto 869 de 2010 reglamentó específicamente el Examen de Estado de la Educación Media Saber 11, y estableció su presentación como requisito de ingreso a programas de pregrado en instituciones de educación superior [@congreso_ley1324;@decreto869;@mineducacion_mejorsaber;@unade_icfes].
 </p>
 
 <p style="text-align: justify;">
-En este contexto, el presente informe técnico analiza la evolución de los resultados de las pruebas Saber 11 en las instituciones educativas urbanas del calendario A en Santa Marta entre 2015 y 2025, planteando tres interrogantes: (i) ¿qué tendencias se observan en los puntajes promedio de las instituciones durante el periodo de estudio?, (ii) ¿cómo varían los puntajes según la naturaleza jurídica de las instituciones?, y (iii) ¿qué relación existe entre las condiciones socioeconómicas y familiares de los estudiantes y su desempeño en la prueba?
+En este contexto, el presente informe técnico analiza la evolución de los resultados de las pruebas Saber 11 en las instituciones educativas urbanas del calendario A en Santa Marta entre 2015 y 2025, planteando tres interrogantes: (i) ¿qué tendencias se observan en los puntajes promedio de las instituciones durante el periodo de estudio?, (ii) ¿cómo varían los puntajes según la naturaleza jurídica de las instituciones?, y (iii) ¿qué relación existe entre las condiciones socioeconómicas y familiares de los estudiantes con su desempeño en la prueba?
 </p>
 
 ## Objetivos
@@ -81,83 +83,48 @@ Analizar la evolución de los resultados de las Pruebas Saber 11 en las instituc
 
 - Comparar el puntaje promedio en la prueba Saber 11 entre instituciones educativas públicas y privadas urbanas durante el periodo de estudio.
 
-- Establecer la relación entre las condiciones socioeconómicas y familiares y el rendimiento de los estudiantes en las pruebas Saber 11.
+- Establecer la relación entre las condiciones socioeconómicas y familiares con el rendimiento de los estudiantes en las pruebas Saber 11.
 </p>
 
 ## Metodología
 
-### Selección del Dataset
-El conjunto de datos utilizado proviene de los archivos oficiales de resultados de las pruebas Saber 11 publicados por el ICFES, y fue seleccionado por su consistencia y continuidad temporal, al abarcar más de diez años de aplicaciones consecutivas. Si bien los archivos fuente presentaban algunos valores nulos en ciertas variables, estos pudieron ser tratados durante el proceso de limpieza, sin comprometer la integridad del análisis.
-
-Adicionalmente, la riqueza estructural del dataset que combina información institucional, características sociodemográficas y familiares de los estudiantes, y puntajes desagregados por componente permite abordar el fenómeno del rendimiento académico desde múltiples perspectivas.
-
-### Descripción del dataset
+### Selección y descripción del Dataset
 <p style="text-align: justify;">
-Los datos corresponden a los resultados individuales de las Pruebas Saber 11, publicados por el ICFES en el portal [datos.gov](https://datos.gov.co/). Se utilizaron 22 archivos en formato Parquet, uno por cada período de aplicación, abarcando desde el primer semestre de 2015 hasta el segundo semestre de 2025 (2015-1, 2016-1, ..., 2025-2). 
+El conjunto de datos utilizado proviene de los archivos oficiales de resultados de las pruebas Saber 11 publicados por el ICFES en el portal [datos.gov](https://datos.gov.co/), y fue seleccionado por su consistencia y continuidad temporal, al abarcar más de diez años de aplicaciones consecutivas. Si bien los archivos fuente contenían algunos valores nulos o vacíos en ciertas variables, estos pudieron tratarse durante el proceso de limpieza sin comprometer la integridad del análisis.
+
+Además, la estructura del conjunto de datos incluye información institucional, características sociodemográficas y familiares de los estudiantes, así como puntajes globales y por componente lo que permitió analizar el rendimiento académico desde diversas perspectivas.
+
+Se emplearon 22 archivos en formato Parquet, uno por cada período de aplicación, que abarcan desde el primer semestre de 2015 hasta el segundo semestre de 2025 (2015-1, 2015-2, ..., 2025-2). La selección de esta serie temporal se fundamenta en que, a partir del segundo semestre de 2014, la prueba Saber 11 experimentó un cambio estructural [@alcaldia_bogota_saber11]. Por lo tanto, analizar periodos anteriores no garantizaba la continuidad de la información ni la consistencia de las variables.
 </p>
 
-### Tratamiento de datos 
-Cada archivo fue cargado, limpiado y estandarizado de forma independiente mediante un pipeline modular en Python, estructurado en cuatro etapas:
-<p style="text-align: justify;">
-1. **Carga**: validación de la estructura de los archivos y selección de columnas de interés según un diccionario de variables.
-2. **Limpieza**: estandarización de campos categóricos (grado, género, jornada, naturaleza), integración de datos institucionales desde un archivo maestro de establecimientos y reordenamiento de columnas.
-3. **Enriquecimiento**: derivación de las columnas `anio_prueba`, `semestre_prueba` y `estu_edad_prueba` a partir del campo `periodo` y la fecha de nacimiento.
-4. **Procesamiento**: filtrado de registros según criterios de análisis (calendario A, área urbana, semestre 2, grado 11, jornadas diurnas) y agregación de datos a nivel institucional por año.
-</p>
+### Arquitectura del proyecto y tratamiento de datos 
 
 <p style="text-align: justify;">
-Los archivos procesados se consolidaron en un único archivo Parquet. Para el análisis de tendencias, se incluyeron exclusivamente las instituciones con presencia continua en todos los años del periodo 2015–2025, garantizando así la comparabilidad longitudinal. Las visualizaciones se generaron con las librerías `matplotlib` y `seaborn`.
+Con el objetivo de garantizar una organización clara y colaborativa del flujo de trabajo, el proyecto se estructuró siguiendo estándares de ciencia de datos mediante una arquitectura modular, asignando a cada componente una responsabilidad específica. El alojamiento en un repositorio de GitHub facilitó la colaboración simultánea y el control eficiente de versiones.
+
+El directorio `data` se utilizó para almacenar tanto los datos crudos (`raw`) como los procesados (`processed`) relacionados con los resultados de las pruebas Saber 11 obtenidos de datos.gov.co, junto con los archivos auxiliares empleados en su estandarización. Los conjuntos de datos se almacenaron en formato Parquet debido a sus ventajas en rendimiento analítico y eficiencia de almacenamiento, especialmente para grandes volúmenes de datos [@bhosale_parquet_2024].
+
+La lógica de procesamiento se implementó en la carpeta `src`, mediante módulos específicos para cada etapa del flujo de trabajo. El módulo `loading.py` gestionó la importación, tipado y selección de variables; `cleaning.py` realizó la estandarización de campos y organización de datos; `enrichment.py` generó variables derivadas para el análisis; `analysis.py` concentró las funciones analíticas; `process.py` ejecutó tareas de filtrado, agregación y procesamiento; y `viz.py` produjo las visualizaciones utilizadas en la exploración y presentación de resultados. Además, `constants.py` almacenó las constantes del proyecto y `main.py` integró la ejecución de todos los procesos. El directorio `reports` está destinado a la consolidación de resultados.
+
+El tratamiento de los datos se realizó mediante un pipeline secuencial de cuatro etapas. La primera consistió en la carga y validación de cada archivo, la verificación de su estructura y la selección de variables de interés a partir de un diccionario previamente definido. La segunda etapa implicó la limpieza orientada a la estandarización de variables categóricas, la integración de información institucional proveniente de un archivo maestro de establecimientos educativos y la reorganización de la estructura de los datos. En la tercera etapa, la información se enriqueció mediante la generación de variables derivadas, como el año de aplicación de la prueba (`anio_prueba`), el semestre (`semestre_prueba`) y la edad del estudiante al momento de la evaluación (`estu_edad_prueba`). Finalmente, el procesamiento analítico incluyó el filtrado de registros según criterios metodológicos establecidos y la agregación de la información a nivel institucional para cada año de estudio. Tras completar estas etapas, los archivos procesados se consolidaron en una única base de datos en formato Parquet.
+
+Para asegurar la consistencia del análisis longitudinal, solo se incluyeron instituciones con presencia continua durante el período 2015–2025, lo que garantiza la comparabilidad temporal de los resultados.
+
+Las visualizaciones y los análisis exploratorios se desarrollaron utilizando las librerías `matplotlib` y `seaborn`. Además, se implementó una estrategia de control de versiones basada en Git, estructurada en cuatro ramas principales: `main` para la versión estable del proyecto, `reports` para la consolidación de resultados, `user_interface` para la gestión de la ejecución principal del sistema y `business_logic` para el mantenimiento y la evolución de los módulos de procesamiento y análisis en la carpeta `src`.
 </p>
 
-### Estructura del Proyecto
-<p style="text-align: justify;">
-Para asegurar una organización clara y colaborativa del flujo de trabajo, el proyecto se estructuró conforme a los estándares de ciencia de datos, asignando a cada componente, descrito más adelante, una responsabilidad definida. El proyecto se alojó en un repositorio en GitHub, lo que permitió la colaboración simultánea y un control adecuado de las versiones del proyecto.
-</p>
-
-<p style="text-align: justify;">
-`data`: directorio destinado al almacenamiento de datos crudos (`raw`) y procesados (`processed`) correspondientes a los resultados de la prueba Saber 11 obtenidos en datos.gov (http://datos.gov/) de los archivos auxiliares empleados para su estandarización. Cabe destacar que los archivos se encuentran en formato Parquet, que permite realizar consultas analíticas hasta 100 veces más rápidas y reduce el tamaño de almacenamiento hasta cinco veces en comparación con formatos como CSV o JSON. Esta eficiencia se atribuye a su diseño de almacenamiento en columnas, optimizado para grandes volúmenes de datos. 
-</p>
-
-<p style="text-align: justify;">
-`src` **o source**: esta carpeta contiene los scripts en Python para cada una de las responsabilidades de la resolución del proyecto. A continuación, se describen las funciones:
-</p>
-
-<p style="text-align: justify;">
-* `loading.py`: se encarga de importar los datos crudos, el tipado y selección de variables y la selección del intervalo de años que se desee evaluar.
-* `cleaning.py`: el propósito de las funciones de este archivo es realizar la estandarización de variables y ordenamiento de las columnas.
-* `enrichement.py`: saca nueva información en base de los datos originales creando nuevas columnas cálculos para su posterior análisis.
-* `análisis.py`: se encarga de almacenar las funciones para analizar el conjunto de datos.
-* `process.py`: este código filtra, agrega y procesa datos de las pruebas para generar visualizaciones.
-* `viz.py`: este código crea los gráficos para visualizar las tendencias de la prueba para su posterior analisis.
-</p>
-
-<p style="text-align: justify;">
-`reports`: directorio de salida para consolidar el informe técnico final con los resultados y visualizaciones a partir del análisis para separar la producción de resultados del código fuente.
-`notebooks`: fue utilizado como espacio para recopilar información para el proyecto y después considerar si se integraba al reporte oficial o no. 
-`constants.py`: en este archivo se almacenan los argumentos de carácter fijo que serán utilizados en las funciones de `main.py`.
-`main.py`: contiene todas las funciones diseñadas para llevar a cabo el análisis de los datos.
-</p>
-
-<p style="text-align: justify;">
-Asimismo, se crearon cuatro ramas usando el software de control de versiones Git, las cuales son las siguientes:
-
-* `main`: en esta rama se mantiene la versión estable del proyecto.
-* `reports`: para la consolidación de los resultados del proyecto.
-* `user_interface`: en esta rama se gestionará lo que concierne a la implementación de los archivos `main.py` y `constants.py`.
-* `business_logic`: busca gestionar los archivos referentes al código inmersos en la carpeta `src/`.
-</p>
 
 ### Uso de herramientas de inteligencia artificial
  
 En el desarrollo del presente proyecto se hizo uso de herramientas de inteligencia artificial generativa como apoyo instrumental en tareas específicas del flujo de trabajo técnico, empleando **Claude Code** y **ChatGPT** como asistentes de programación. 
 
-Su uso se concentró en tres frentes: la consulta de funciones disponibles en las librerías científicas de Python principalmente `pangouin` para la selección e implementación de los test estadísticos adecuados al análisis comparativo de puntajes; la traducción de código de visualización desarrollado inicialmente en R con `ggplot2` hacia su equivalente en Python con `matplotlib` y `seaborn`; y la corrección de errores puntuales de sintaxis, compatibilidad de tipos de datos y comportamiento inesperado de funciones durante el desarrollo del pipeline. 
+Su uso se concentró en cuatro usos: i) la consulta de funciones disponibles en las librerías de Python principalmente `pangouin` para la selección e implementación de los test estadísticos adecuados al análisis comparativo de puntajes; ii) la traducción de código de visualización desarrollado inicialmente en R con `ggplot2` hacia su equivalente en Python con `matplotlib` y `seaborn`; iii) la corrección de errores puntuales de sintaxis, compatibilidad de tipos de datos y comportamiento inesperado de funciones durante el desarrollo del pipeline y iv) apoyo en la gestión y citación de la bibliografia. 
 
 En todos los casos, el uso de estas herramientas se limitó a un rol de apoyo técnico, siendo la definición de los objetivos analíticos, la interpretación de los resultados y las decisiones metodológicas responsabilidad exclusiva del equipo de trabajo.
 
 ## Análisis exploratorio de los datos
 <p style="text-align: justify;">
-Para el análisis de tendencias se incluyeron únicamente las instituciones con presencia continua en todos los años del periodo 2015–2025, con el objetivo de garantizar comparabilidad longitudinal. Las visualizaciones se construyeron con `matplotlib` y `seaborn`.
+Para este analisis se utilizarón los datos tratados y enriquecidos.
 </p>
 
 ```{python}
@@ -190,12 +157,12 @@ df = add_period_columns(df_origin)
 ### Descripción general de los datos
 
 <p style="text-align: justify;">
- El conjunto de datos contiene `{python} len(df)` registros y `{python} df.shape[1]` variables, el cual ocupa 35.9 MB de memoria. Las variables incluyen información institucional de los establecimientos, características sociodemográficas y familiares de los estudiantes, además de los puntajes obtenidos en cada componente de la prueba, incluido el puntaje global.
+ El conjunto de datos contiene `{python} len(df)` registros y `{python} df.shape[1]` variables, el cual ocupa 35.9 MB de memoria.  Las variables abarcan información institucional de los establecimientos, características sociodemográficas y familiares de los estudiantes, así como los puntajes obtenidos en cada componente de la prueba, incluido el puntaje global. Se incluyen diversos tipos de variables, tales como `string`, `bool`, `datetime64` y `category`.
 </p>
 
 ```{python}
 #| label: tbl-info
-#| tbl-cap: Resumen de la cantidad y tipo de datos del dataset.
+#| tbl-cap: Resumen de la cantidad y tipos de datos del dataset.
 df.info(memory_usage='deep')
 ```
 
@@ -213,15 +180,11 @@ missing_summary(df).query("n_missing > 0")
 
 **Distribución por caracteristicas institucionales**
 
-El análisis exploratorio de las características institucionales muestra una distribución heterogénea de las instituciones educativas en el Distrito de Santa Marta. La jornada de la mañana tiene la mayor participación, seguida por la de la tarde. Las jornadas única y nocturna presentan una representación intermedia, mientras que las jornadas completa y sabatina tienen una presencia considerablemente menor. Este patrón refleja la histórica predominancia del modelo de doble jornada en el sistema educativo distrital.
- 
-En cuanto al área de ubicación, se observó una marcada concentración de instituciones en el sector urbano, con 121 establecimientos frente a 27 en zonas rurales. Esta diferencia implica contextos educativos, sociales y económicos distintos, que pueden influir en los resultados académicos y generar sesgos en las comparaciones. Para garantizar mayor homogeneidad en la población de estudio y fortalecer la validez de los análisis, se restringió la muestra a las instituciones urbanas.
- 
-De manera similar, la distribución por calendario académico mostró una amplia predominancia del calendario A, con 144 instituciones, mientras que el calendario B solo estuvo representado por dos establecimientos. Debido a la insuficiencia de observaciones en este grupo, se excluyó del análisis para evitar inferencias poco confiables.
- 
-La aplicación conjunta de estos criterios de depuración, que incluyen instituciones urbanas, calendario A y jornadas diurnas, permitió conformar una muestra final de 119 instituciones educativas urbanas. De estas, 50 pertenecen al sector oficial y 70 al sector no oficial, lo que proporciona una base adecuada para comparar ambos tipos de establecimientos.
+La Figura 1 muestra la distribución de las instituciones según su naturaleza jurídica, área de ubicación, calendario académico y jornada escolar. En cuanto a la jornada escolar, la mañana concentra la mayor cantidad de instituciones, seguida por la tarde, única y nocturna. La jornada completa y la sabatina tienen una presencia mucho menor.
 
-La Figura 1 muestra la distribución de las instituciones según naturaleza jurídica, área de ubicación, calendario y jornada académica. La Figura 2 presenta la distribución del puntaje global de las Pruebas Saber 11 para cada una de estas categorías. En general, las distribuciones evidencian diferencias entre los grupos institucionales, especialmente entre instituciones oficiales y no oficiales, lo que respalda la necesidad de profundizar en el análisis comparativo de los factores asociados al desempeño académico.
+En el área de ubicación, se identificó una concentración significativa de instituciones en el sector urbano, con 121 establecimientos frente a 27 en zonas rurales. Por eso, en este análisis consideramos la ubicación de la mayoría. De forma similar, la distribución por calendario académico mostró una predominancia del calendario A, con 144 instituciones, mientras que el calendario B registró solo 2 establecimientos. Debido a la escasa cantidad de observaciones en este último grupo, se decidió excluirlo del análisis.
+
+La Figura 2 muestra la distribución del puntaje global según las características institucionales mencionadas previamente. En el panel del calendario, la distribución del grupo B se desplaza hacia puntajes considerablemente más altos que los del grupo A. Esto sugiere que ambos calendarios responden a contextos educativos distintos [@tobon_diferencia_2024], lo que podría distorsionar la comparación. De manera similar, el análisis por área de ubicación revela que las instituciones rurales presentan una concentración de puntajes más bajos que las urbanas, lo que podría requerir un análisis más complejo de las dinámicas socioeconómicas [@pinta_calle_influencia_2025; @icfes_informe_nacional_2024]. Finalmente, el panel de la jornada indica que las jornadas nocturnas, sabatinas y completas presentan distribuciones desplazadas hacia la izquierda en comparación con las diurnas. Normalmente, esta jornada está dirigida a la población estudiantil adulta [@presidencia_decreto3011_1997], lo que introduciría heterogeneidad en el análisis. Por estas razones, restringir la muestra a instituciones urbanas, al calendario A y a jornadas diurnas garantiza la homogeneidad contextual necesaria para que las comparaciones entre instituciones oficiales y no oficiales sean interpretables y estadísticamente válidas.
 
 ```{python}
 #| label: fig-naturaleza
@@ -255,7 +218,7 @@ plt.show()
 
 ```{python}
 #| label: fig-oficial-vs-no
-#| fig-cap: "Distribución del puntaje global según naturaleza jurídica de la institución."
+#| fig-cap: "Distribución del puntaje global según caracteristicas institucionales."
 
 
 fig, axes = plt.subplots(2, 2, figsize=(12, 8))
@@ -285,6 +248,8 @@ fig.tight_layout()
 plt.show()
 ```
 
+En consecuencia, los criterios de selección consideraron únicamente instituciones urbanas, con calendario A y jornadas diurna,tarde y unica, lo que dio como resultado una muestra final de 69 instituciones. De estas, 40 corresponden al sector oficial y 29 al no oficial, lo que constituye una base adecuada para el análisis comparativo del objetivo 2.
+
 ## Resultados
 
 Los siguientes resultados seran organizado por etapas que estan directamente relacionados con los objetivos especificos del informe. Asimismo, se realizó un analisis estadistico descriptivo del dataset final seleccionado en la sección anterior.
@@ -293,7 +258,7 @@ Los siguientes resultados seran organizado por etapas que estan directamente rel
 ### Etapa 1:Tendencia del puntaje por institución (2015–2025)
 
 <p style="text-align: justify;">
-Se analizan las instituciones educativas oficiales, urbanas, calendario A, semestre 2, jornada diurna, con presencia continua en los diez años del periodo. Las tres instituciones con mayor y menor puntaje promedio ponderado se destacan en color; el resto se muestra en gris. La franja azul corresponde al rango intercuartílico anual y la línea negra al promedio ponderado general.
+ Las tres instituciones con mayor y menor puntaje promedio ponderado se destacan en color; el resto se muestra en gris. La franja azul corresponde al rango intercuartílico anual y la línea negra al promedio ponderado general.
 </p>
 
 ```{python}
@@ -512,3 +477,4 @@ Estos hallazgos son consistentes con la literatura nacional sobre calidad educat
 4.	Presidencia de la República de Colombia. (2010).Decreto 869 de 2010 “Por el cual se reglamenta el Examen de Estado de la Educación Media, ICFES SABER 11°”
 5.	ICFES: Mejor saber - Ministerio de Educación Nacional de Colombia (s. f.). https://www.mineducacion.gov.co/1621/article-241784.html 
 6.	 American University of Europe -UNADE. (2025). ICFES y su Importancia en Colombia. Universidad Americana de Europa. https://unade.edu.mx/icfes-y-su-importancia-en-colombia/ 
+7. Alcaldía Mayor de Bogotá. (2014, 24 de febrero). A partir del segundo semestre de 2014, la prueba SABER 11° se modifica. https://bogota.gov.co/mi-ciudad/educacion/partir-del-segundo-semestre-de-2014-la-prueba-saber-11deg-se-modifica
