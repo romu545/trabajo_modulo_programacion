@@ -46,6 +46,13 @@ format:
           img { max-width: 100%; height: auto; }
           p { text-align: justify; }
         </style>
+  pdf:
+    fig-pos: 'H'
+    include-in-header:
+      text: |
+        \usepackage{float}
+        \floatplacement{figure}{H}
+        \floatplacement{table}{H}
 
 execute:
   echo: false
@@ -102,7 +109,7 @@ Se emplearon 22 archivos en formato Parquet, uno por cada período de aplicació
 <p style="text-align: justify;">
 Con el objetivo de garantizar una organización clara y colaborativa del flujo de trabajo, el proyecto se estructuró siguiendo estándares de ciencia de datos mediante una arquitectura modular, asignando a cada componente una responsabilidad específica. El alojamiento en un repositorio de GitHub facilitó la colaboración simultánea y el control eficiente de versiones.
 
-El directorio `data` se utilizó para almacenar tanto los datos crudos (`raw`) como los procesados (`processed`) relacionados con los resultados de las pruebas Saber 11 obtenidos de datos.gov.co, junto con los archivos auxiliares empleados en su estandarización. Los conjuntos de datos se almacenaron en formato Parquet debido a sus ventajas en rendimiento analítico y eficiencia de almacenamiento, especialmente para grandes volúmenes de datos [@bhosale_parquet_2024].
+El directorio `data` se utilizó para almacenar tanto los datos crudos (`raw`) como los procesados (`processed`) relacionados con los resultados de las pruebas Saber 11, junto con los archivos auxiliares empleados en su estandarización. Los conjuntos de datos se almacenaron en formato Parquet debido a sus ventajas en rendimiento analítico y eficiencia de almacenamiento, especialmente para grandes volúmenes de datos [@bhosale_parquet_2024].
 
 La lógica de procesamiento se implementó en la carpeta `src`, mediante módulos específicos para cada etapa del flujo de trabajo. El módulo `loading.py` gestionó la importación, tipado y selección de variables; `cleaning.py` realizó la estandarización de campos y organización de datos; `enrichment.py` generó variables derivadas para el análisis; `analysis.py` concentró las funciones analíticas; `process.py` ejecutó tareas de filtrado, agregación y procesamiento; y `viz.py` produjo las visualizaciones utilizadas en la exploración y presentación de resultados. Además, `constants.py` almacenó las constantes del proyecto y `main.py` integró la ejecución de todos los procesos. El directorio `reports` está destinado a la consolidación de resultados.
 
@@ -120,7 +127,7 @@ Las referencias utilizadas para la creación de este documento fueron guardadas 
  
 En el desarrollo del presente proyecto se hizo uso de herramientas de inteligencia artificial generativa como apoyo instrumental en tareas específicas del flujo de trabajo técnico, empleando **Claude Code** y **ChatGPT** como asistentes de programación. 
 
-Su uso se concentró en cuatro usos: i) la consulta de funciones disponibles en las librerías de Python principalmente `pangouin` para la selección e implementación de los test estadísticos adecuados al análisis comparativo de puntajes; ii) la traducción de código de visualización desarrollado inicialmente en R con `ggplot2` hacia su equivalente en Python con `matplotlib` y `seaborn`; iii) la corrección de errores puntuales de sintaxis, compatibilidad de tipos de datos y comportamiento inesperado de funciones durante el desarrollo del pipeline y iv) apoyo en la gestión y citación de la bibliografia. 
+Su uso se concentró en cuatro objetivos: i) la consulta de funciones disponibles en las librerías de Python principalmente `pangouin` para la selección e implementación de los test estadísticos adecuados al análisis comparativo de puntajes; ii) la traducción de código de visualización desarrollado inicialmente en R con `ggplot2` hacia su equivalente en Python con `matplotlib` y `seaborn`; iii) la corrección de errores puntuales de sintaxis, compatibilidad de tipos de datos y comportamiento inesperado de funciones durante el desarrollo del pipeline y iv) apoyo en la gestión y citación de la bibliografia. 
 
 En todos los casos, el uso de estas herramientas se limitó a un rol de apoyo técnico, siendo la definición de los objetivos analíticos, la interpretación de los resultados y las decisiones metodológicas responsabilidad exclusiva del equipo de trabajo.
 
@@ -420,7 +427,7 @@ La prueba de hipotesis nos da un P-value de `{python} str(_et2_tt['p_val'].iloc[
 <p style="text-align: justify;">
 Se examina la relación entre el estrato socioeconómico del hogar y el puntaje global, diferenciando además entre instituciones oficiales y no oficiales, como aproximación a las condiciones materiales de los estudiantes.
 
-La Figura 5 muestra la distribución del puntaje global según el estrato socioeconómico del hogar,diferenciando entre instituciones oficiales y no oficiales. En ambos grupos se observa una tendencia positiva: a medida que aumenta el estrato, los puntajes medianos tienden a ser más altos. Las instituciones no oficiales registran puntajes superiores a las oficiales en todos los estratos, y esta brecha se mantiene a lo largo de toda la escala socioeconómica.
+La Figura 5 muestra la distribución del puntaje global según el estrato socioeconómico del hogar,diferenciando entre instituciones oficiales y no oficiales. Se observa una tendencia positiva en los colegios no oficiales pero una negativa en los colegios oficiales, las instituciones no oficiales registran puntajes superiores a las oficiales en todos los estratos, y esta brecha se solo aumenta a lo largo de toda la escala socioeconómica.
 </p>
 
 ```{python}
@@ -468,7 +475,7 @@ plt.show()
 La Figura 6 presenta la distribución del puntaje global según el nivel educativo de la madre. 
 Los resultados muestran una relación positiva entre esta variable y el desempeño en la prueba: 
 los estudiantes cuyas madres alcanzaron niveles educativos más altos como educación profesional 
-completa o posgrado tienden a obtener puntajes más elevados. Esta tendencia es consistente tanto en instituciones oficiales como no oficiales, aunque las no oficiales mantienen puntajes medianos superiores en todos los niveles educativos.
+completa o posgrado tienden a obtener puntajes más elevados. Esta tendencia es consistente tanto en instituciones oficiales como no oficiales, aunque las no oficiales mantienen puntajes superiores en todos los niveles educativos.
 
 ```{python}
 #| label: fig-educacion-madre
@@ -515,7 +522,7 @@ plt.show()
 ```
 
 <p style="text-align: justify;">
-Para resumir la relación entre el conjunto de condiciones socioeconómicas y el puntaje global, se calculó la correlación de Spearman de cada variable con el puntaje global, dado que las variables son de naturaleza ordinal estrato, nivel educativo, número de libros, tenencia de bienes y no continuas. La Tabla 5 presenta los resultados. Todas las correlaciones son positivas, lo que indica que mejores condiciones socioeconómicas se asocian con puntajes más altos. El nivel educativo de la madre es el factor con mayor correlación (0.321), seguido por el nivel educativo del padre (0.294), la tenencia de computador (0.213), el número de libros en el hogar (0.210), el estrato (0.192), la tenencia de internet (0.191) y la tenencia de automóvil (0.174).
+Para resumir la relación entre el conjunto de condiciones socioeconómicas y el puntaje global, se calculó la correlación de Spearman de cada variable con el puntaje global, dado que las variables son de naturaleza ordinal estrato, nivel educativo, número de libros, tenencia de bienes. La Tabla 5 presenta los resultados. Todas las correlaciones son positivas, lo que indica que mejores condiciones socioeconómicas se asocian con puntajes más altos. El nivel educativo de la madre es el factor con mayor correlación (0.321), seguido por el nivel educativo del padre (0.294), la tenencia de computador (0.213), el número de libros en el hogar (0.210), el estrato (0.192), la tenencia de internet (0.191) y la tenencia de automóvil (0.174).
 </p>
 
 ```{python}
@@ -550,10 +557,6 @@ correlaciones = (
 )
 correlaciones
 ```
-
-<p style="text-align: justify;">
-Todas las correlaciones son positivas: a mejores condiciones socioeconómicas, mayor es el puntaje global. El nivel educativo de los padres es el factor más asociado al desempeño, seguido por los bienes del hogar (computador, internet, automóvil), el número de libros y el estrato.
-</p>
 
 #### Test de Hipotesis
 De forma similar a la Etapa 2, comprobamos si contar con internet en el hogar se asocia con un mejor puntaje. Partimos de la hipótesis nula de que la media de los estudiantes con y sin internet es la misma; si la rechazamos, habrá una diferencia significativa con un $95\%$ de confianza:
@@ -591,7 +594,7 @@ En conjunto, los tres hallazgos apuntan a que el desempeño en las pruebas Saber
 
 <p style="text-align: justify;">
 
-El presente estudio analizó la evolución de los resultados de las pruebas Saber 11 en instituciones educativas urbanas del Calendario A de Santa Marta entre 2015 y 2025, abordando tendencias temporales, diferencias institucionales y factores socioeconómicos asociados al desempeño. Se observó un incremento estadísticamente significativo en el puntaje global promedio, de 242.3 puntos en 2015 a 258.2 en 2025, aunque con descensos interanuales, especialmente en 2021 debido a la pandemia por COVID-19. Desde 2022, los promedios han retomado una tendencia ascendente sostenida. Las instituciones no oficiales obtuvieron puntajes promedio superiores a las oficiales (274.96 frente a 242.02 puntos), con una diferencia estadísticamente significativa y estable durante todo el periodo, lo que indica desigualdades estructurales. Todas las variables socioeconómicas analizadas mostraron correlaciones positivas con el puntaje global. El nivel educativo de la madre fue el factor más asociado al desempeño (correlación de Spearman de 0.321), seguido por el nivel educativo del padre y la tenencia de bienes tecnológicos en el hogar. Los estudiantes con acceso a internet obtuvieron puntajes significativamente más altos que quienes no cuentan con este recurso. 
+El presente estudio analizó la evolución de los resultados de las pruebas Saber 11 en instituciones educativas urbanas del Calendario A de Santa Marta entre 2015 y 2025, abordando tendencias temporales, diferencias institucionales y factores socioeconómicos asociados al desempeño. Se observó un incremento estadísticamente significativo en el puntaje global promedio, de 242.3 puntos en 2015 a 258.2 en 2025, aunque con descensos interanuales, especialmente en 2021 debido a la pandemia por COVID-19. Desde 2022, los promedios han retomado una tendencia ascendente sostenida. Las instituciones no oficiales obtuvieron puntajes promedio superiores a las oficiales (274.96 frente a 242.02 puntos), lo que indica desigualdades estructurales. Todas las variables socioeconómicas analizadas mostraron correlaciones positivas con el puntaje global. El nivel educativo de la madre fue el factor más asociado al desempeño (correlación de Spearman de 0.321), seguido por el nivel educativo del padre y la tenencia de bienes tecnológicos en el hogar. Los estudiantes con acceso a internet obtuvieron puntajes más altos que quienes no cuentan con este recurso. 
 
 En conjunto, los resultados muestran que el rendimiento en las pruebas Saber 11 en Santa Marta está fuertemente influido por factores externos a la escuela. Por tanto, las intervenciones centradas únicamente en el ámbito escolar tienen un alcance limitado para reducir las brechas de desempeño. Es fundamental atender las condiciones socioeconómicas y familiares del estudiante para avanzar hacia una mayor equidad educativa en el distrito.
 
