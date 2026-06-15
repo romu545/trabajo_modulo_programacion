@@ -111,6 +111,8 @@ El tratamiento de los datos se realizó mediante un pipeline secuencial de cuatr
 Para asegurar la consistencia del análisis longitudinal, solo se incluyeron instituciones con presencia continua durante el período 2015–2025, lo que garantiza la comparabilidad temporal de los resultados.
 
 Las visualizaciones y los análisis exploratorios se desarrollaron utilizando las librerías `matplotlib` y `seaborn`. Además, se implementó una estrategia de control de versiones basada en Git, estructurada en cuatro ramas principales: `main` para la versión estable del proyecto, `reports` para la consolidación de resultados, `user_interface` para la gestión de la ejecución principal del sistema y `business_logic` para el mantenimiento y la evolución de los módulos de procesamiento y análisis en la carpeta `src`.
+
+Las referencias utilizadas para la creación de este documento fueron guardadas dentro del archivo `reports/Reference.bib` y serán referenciadas dentro del documento con el formato IEEE.
 </p>
 
 
@@ -594,3 +596,5 @@ El presente estudio analizó la evolución de los resultados de las pruebas Sabe
 En conjunto, los resultados muestran que el rendimiento en las pruebas Saber 11 en Santa Marta está fuertemente influido por factores externos a la escuela. Por tanto, las intervenciones centradas únicamente en el ámbito escolar tienen un alcance limitado para reducir las brechas de desempeño. Es fundamental atender las condiciones socioeconómicas y familiares del estudiante para avanzar hacia una mayor equidad educativa en el distrito.
 
 </p>
+
+## Referencias
