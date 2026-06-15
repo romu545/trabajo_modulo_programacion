@@ -2,7 +2,7 @@
 
 Proyecto desarrollado para la especialización en Ciencia de Datos. Analiza la evolución del puntaje global en las Pruebas Saber 11 de las instituciones educativas del departamento de Magdalena, con foco en el periodo 2015–2025.
 
-**Autores:** [Nombre 1] · [Nombre 2] · [Nombre 3]
+**Autores:** Rafael · Camilo · Sheimy
 
 ---
 

@@ -1,4 +1,3 @@
-# pyright: reportGeneralTypeIssues=false
 import re
 import os
 from pathlib import Path
