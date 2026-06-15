@@ -31,7 +31,8 @@ Los datos provienen del portal de datos abiertos del ICFES (resultados por aplic
 │       └── result_saber_11_clean.parquet  # Dataset procesado (generado)
 ├── reports/
 │   ├── Final Report.qmd             # Reporte principal (Quarto)
-│   └── Final Report.html            # Versión renderizada
+│   ├── Final Report.html            # Versión renderizada
+│   └── Reference.bib                # Referencias bibliográficas
 ├── src/
 │   ├── loading.py      # Carga y validación de archivos parquet
 │   ├── cleaning.py     # Limpieza, estandarización y codificaciones ordinales
